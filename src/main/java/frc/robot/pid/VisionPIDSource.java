@@ -1,6 +1,5 @@
 package frc.robot.pid;
 
-import frc.robot.hardware.RobotModel;
 import frc.robot.controllers.VisionController;
 /*
  * TODO Learn how to make camera a pid source
@@ -9,10 +8,8 @@ import edu.wpi.first.wpilibj.PIDSourceType;*/
 
 public class VisionPIDSource {
 	private VisionController vision;
-	private RobotModel robot;
-	public VisionPIDSource(VisionController vision, RobotModel robot) {
+	public VisionPIDSource(VisionController vision) {
 		this.vision = vision;
-		this.robot = robot;
 	}
 	
 /*	@Override

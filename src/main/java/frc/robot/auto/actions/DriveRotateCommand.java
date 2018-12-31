@@ -3,14 +3,11 @@ package frc.robot.auto.actions;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.MasterController;
 import frc.robot.Params;
 import frc.robot.controllers.DriveController;
-import frc.robot.hardware.RobotModel;
 /*** Rotate to a specified angle with encoders as sensor ***/
 public class DriveRotateCommand extends Command{
 	private DriveController driveTrain;
-	private RobotModel robot;
 	/*** Distance Setpoint (Converted from angle in degrees to inches) ***/
 	private double distance;
 	/*** Max time for action to complete ***/
@@ -36,16 +33,14 @@ public class DriveRotateCommand extends Command{
 	 * @param timeout Max allowed time action runs for
 	 * @param waitForTimeout Whether to wait the full timeout, even if the setpoint is reached
 	 */ 
-	public DriveRotateCommand(MasterController controllers, double angle, double maxSpeed, double timeout, boolean waitForTimeout) {
+	public DriveRotateCommand(DriveController driveController, double angle, double maxSpeed, double timeout, boolean waitForTimeout) {
 		
-		requires(controllers.getDriveController());
-		requires(controllers.getRobotModel());
+		requires(driveController);
 		
-		this.driveTrain = controllers.getDriveController();
+		this.driveTrain = driveController;
 		//It takes 20 inches on the left side and -20 inches on the right side to turn 90 degrees
 		this.distance = (angle * 20.0) / (90.0);
 		this.timeout = timeout;
-		this.robot = controllers.getRobotModel();
 		this.maxSpeed = maxSpeed;
 		this.waitForTimeout = waitForTimeout;
 		
@@ -97,10 +92,10 @@ public class DriveRotateCommand extends Command{
 	public void start() {
 		start_time = Timer.getFPGATimestamp();
 		
-		robot.resetEncoders();
+		driveTrain.resetEncoders();
 		
-		leftEncoderStartDistance = robot.getLeftDriveEncoderDistance();
-		rightEncoderStartDistance = robot.getRightDriveEncoderDistance();
+		leftEncoderStartDistance = driveTrain.leftDriveEncoder.getDistance();
+		rightEncoderStartDistance = driveTrain.leftDriveEncoder.getDistance();
 		
 		driveTrain.configureLeftPID(maxSpeed, P, I, D, (distance - leftEncoderStartDistance));
 		

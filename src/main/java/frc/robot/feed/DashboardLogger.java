@@ -3,18 +3,15 @@ package frc.robot.feed;
 import frc.robot.Params;
 import frc.robot.controllers.DriveController;
 import frc.robot.hardware.RemoteControl;
-import frc.robot.hardware.RobotModel;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class DashboardLogger {
 	private RemoteControl humanControl;
-	private RobotModel robot;
 	private DriveController driveController;
 
-	public DashboardLogger(RobotModel robot, RemoteControl humanControl, DriveController driveController) {
-		this.robot = robot;
+	public DashboardLogger(RemoteControl humanControl, DriveController driveController) {
 		this.humanControl = humanControl;
 		this.driveController = driveController;
 		if(DriverStation.getInstance().isFMSAttached()) {
@@ -24,7 +21,7 @@ public class DashboardLogger {
 
 	public void updateData() {
 		
-		SmartDashboard.putNumber("DEBUG_FPGATimestamp", robot.getTimestamp());
+		//SmartDashboard.putNumber("DEBUG_FPGATimestamp", robot.getTimestamp());
 		if(DriverStation.getInstance().isFMSAttached()) {
 			putMatchInfo();
 		}
@@ -92,11 +89,11 @@ public class DashboardLogger {
 
 	public void putMotorOutputs() {
 		
-		SmartDashboard.putBoolean("MOTORS_leftDrive_REVERSED", robot.getLeftDriveMotors().getInverted());
-		SmartDashboard.putBoolean("MOTORS_rightDrive_REVERSED", robot.getRightDriveMotors().getInverted());
+		SmartDashboard.putBoolean("MOTORS_leftDrive_REVERSED", driveController.leftDriveMotors.getInverted());
+		SmartDashboard.putBoolean("MOTORS_rightDrive_REVERSED", driveController.leftDriveMotors.getInverted());
 		
-		SmartDashboard.putNumber("LEFT_DRIVE_MOTORS", robot.getLeftDriveMotors().get());
-		SmartDashboard.putNumber("RIGHT_DRIVE_MOTORS", robot.getRightDriveMotors().get());
+		SmartDashboard.putNumber("LEFT_DRIVE_MOTORS", driveController.leftDriveMotors.get());
+		SmartDashboard.putNumber("RIGHT_DRIVE_MOTORS", driveController.rightDriveMotors.get());
 
 	}
 
@@ -125,17 +122,14 @@ public class DashboardLogger {
 	
 	
 	public void putSensors() {
-		SmartDashboard.putNumber("LEFT_ENC_DISTANCE", robot.getLeftDriveEncoderDistance());
-		SmartDashboard.putNumber("RIGHT_ENC_DISTANCE", robot.getRightDriveEncoderDistance());
-		SmartDashboard.putNumber("LEFT_ENC_VELOCITY", robot.getLeftDriveEncoderVelocity());
-		SmartDashboard.putNumber("RIGHT_ENC_VELOCITY", robot.getRightDriveEncoderVelocity());
+		SmartDashboard.putNumber("LEFT_ENC_DISTANCE", driveController.leftDriveEncoder.getDistance());
+		SmartDashboard.putNumber("RIGHT_ENC_DISTANCE", driveController.rightDriveEncoder.getDistance());
+		SmartDashboard.putNumber("LEFT_ENC_VELOCITY", driveController.leftDriveEncoder.getRate());
+		SmartDashboard.putNumber("RIGHT_ENC_VELOCITY", driveController.rightDriveEncoder.getRate());
 		
-		SmartDashboard.putNumber("ACCELEROMETER_X", robot.getAccelX());
-		SmartDashboard.putNumber("ACCELEROMETER_Y", robot.getAccelY());
-		SmartDashboard.putNumber("ACCELEROMETER_Z", robot.getAccelZ());
+
 		
-		SmartDashboard.putData("RIGHT_DRIVE_ENCODER_SENDABLE", robot.getRightDriveEncoder());
-		SmartDashboard.putData("LEFT_DRIVE_ENCODER_SENDABLE", robot.getLeftDriveEncoder());
+		
 
 	}
 	

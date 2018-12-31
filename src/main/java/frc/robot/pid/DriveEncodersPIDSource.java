@@ -1,20 +1,22 @@
 package frc.robot.pid;
 
-import frc.robot.hardware.RobotModel;
 
 import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.PIDSourceType;
+import edu.wpi.first.wpilibj.Encoder;
+
 /*** PID Source for Driving with Encoders ***/
 public class DriveEncodersPIDSource implements PIDSource {
-	private RobotModel robot;
+	private Encoder leftDriveEncoder, rightDriveEncoder;
 	/*** Averages encoder values and returns them to PID Controller ***/
-	public DriveEncodersPIDSource(RobotModel robot) {
-		this.robot = robot;
+	public DriveEncodersPIDSource(Encoder leftDriveEncoder, Encoder rightDriveEncoder) {
+		leftDriveEncoder = this.leftDriveEncoder;
+		rightDriveEncoder = this.rightDriveEncoder;
 	}
 	
 	@Override
 	public PIDSourceType getPIDSourceType() {
-		return robot.getLeftDriveEncoder().getPIDSourceType();
+		return leftDriveEncoder.getPIDSourceType();
 		//TODO Add right encoder somehow
 	}
 	@Override
@@ -31,15 +33,15 @@ public class DriveEncodersPIDSource implements PIDSource {
 
 	@Override
 	public void setPIDSourceType(PIDSourceType pidSource) {
-		robot.getLeftDriveEncoder().setPIDSourceType(pidSource);
-		robot.getRightDriveEncoder().setPIDSourceType(pidSource);		
+		leftDriveEncoder.setPIDSourceType(pidSource);
+		rightDriveEncoder.setPIDSourceType(pidSource);		
 	}
 	
 	public double getAverageDistance() {
-		return ((robot.getLeftDriveEncoderDistance()) + (robot.getRightDriveEncoderDistance())) / 2.0;	
+		return (leftDriveEncoder.getDistance() + rightDriveEncoder.getDistance()) / 2.0;	
 	}
 	public double getAverageRate() {
-		return ((robot.getLeftDriveEncoderVelocity()) + (robot.getRightDriveEncoderVelocity())) / 2.0;	
+		return (leftDriveEncoder.getRate() + rightDriveEncoder.getRate()) / 2.0;	
 	}
 
 }

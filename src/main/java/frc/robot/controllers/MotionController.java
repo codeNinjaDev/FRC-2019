@@ -3,10 +3,7 @@ package frc.robot.controllers;
 import java.io.File;
 
 
-import frc.robot.hardware.RobotModel;
 import frc.robot.Params;
-
-
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -25,7 +22,7 @@ import jaci.pathfinder.modifiers.TankModifier;
  * 
  **/
 public class MotionController extends Subsystem {
-	private RobotModel robot;
+	private DriveController driveController;
 	boolean isProfileFinished = false;
 
 	/**
@@ -89,8 +86,8 @@ public class MotionController extends Subsystem {
 	private boolean isEnabled;
 	
 	/** Gets RobotModel object and sets boolean isEnabled to false **/
-	public MotionController(RobotModel robot) {
-		this.robot = robot;
+	public MotionController(DriveController driveController) {
+		this.driveController = driveController;
 		isEnabled = false;
 		
 	}
@@ -161,8 +158,8 @@ public class MotionController extends Subsystem {
 		//Sets enabled to true
 		isEnabled = true;
 		//Configures Encoders
-		left.configureEncoder(robot.getLeftDriveEncoderRaw(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
-		right.configureEncoder(robot.getRightDriveEncoderRaw(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
+		left.configureEncoder(driveController.leftDriveEncoder.get(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
+		right.configureEncoder(driveController.rightDriveEncoder.get(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
 		//Configure PIDVA Constants
 		left.configurePIDVA(Params.kp, Params.ki, Params.kd, Params.kv, Params.ka);
 		right.configurePIDVA(Params.kp, Params.ki, Params.kd, Params.kv, Params.ka);
@@ -181,8 +178,9 @@ public class MotionController extends Subsystem {
 		double deltaTime = Timer.getFPGATimestamp();
 		// If we are enabled and the profile isn't finished
 		if (isEnabled && !isProfileFinished()) {
-			double l = left.calculate(robot.getLeftDriveEncoderRaw());
-			double r = right.calculate(robot.getRightDriveEncoderRaw());
+			//TODO check if get() or getRaw()
+			double l = left.calculate(driveController.leftDriveEncoder.get());
+			double r = right.calculate(driveController.rightDriveEncoder.get());
 
 			double gyro_heading = 0; //TODO robot.getAngle();
 
@@ -190,8 +188,8 @@ public class MotionController extends Subsystem {
 			//Bound Half Degrees and next line just bounds to -180 180
 			double angleDifference = Pathfinder.boundHalfDegrees(desired_heading - gyro_heading);
 			double turn = 0.8 * (-1.0 / 80) * angleDifference;
-			robot.setLeftMotors(l + turn);
-			robot.setRightMotors(r - turn);
+			driveController.setLeftMotors(l + turn);
+			driveController.setRightMotors(r - turn);
 	        
 
 	        if (left.isFinished() && right.isFinished()) {
@@ -206,8 +204,8 @@ public class MotionController extends Subsystem {
 	/** Stops motion profiling **/
 	public void disable() {
 		isEnabled = false;
-		robot.setLeftMotors(0);
-		robot.setRightMotors(0);
+		driveController.setLeftMotors(0);
+		driveController.setRightMotors(0);
 	}
 	@Override
 	protected void initDefaultCommand() {

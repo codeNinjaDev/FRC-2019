@@ -1,19 +1,20 @@
 package frc.robot.controllers;
 
 import frc.robot.Params;
+import frc.robot.pid.*;
 import frc.robot.hardware.RemoteControl;
-import frc.robot.hardware.RobotModel;
-import frc.robot.pid.ArcadeStraightPIDOutput;
-import frc.robot.pid.DriveEncodersPIDSource;
-import frc.robot.pid.WheelsPIDOutput;
-
+import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.SpeedControllerGroup;
+import edu.wpi.first.wpilibj.VictorSP;
+import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.PIDSource;
-import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
+import edu.wpi.first.wpilibj.*;
+import frc.robot.hardware.*;
 /**
  * TODO make this comment better: Handles both teleoperated and autonomus
  * driving
@@ -24,8 +25,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * 
  **/
 public class DriveController extends Subsystem {
+	/*** Drive Motors ***/
+	private VictorSP leftDriveMotorA, leftDriveMotorB, rightDriveMotorA, rightDriveMotorB;
+	/*** Motor Groups for Drive ***/
+	public SpeedControllerGroup leftDriveMotors, rightDriveMotors;
+	/*** Drive Encoder ***/
+	public SuperEncoder leftDriveEncoder, rightDriveEncoder;
 
-	private RobotModel robot;
+	private AnalogGyro gyro;
 	// Handles the math for arcade, curvature, and tank drive
 	private DifferentialDrive drive;
 	private RemoteControl humanControl;
@@ -33,18 +40,6 @@ public class DriveController extends Subsystem {
 	private DriveState m_stateVal;
 	/** Next drive state **/
 	private DriveState nextState;
-	/**
-	 * Left PID Output <i>Uses {@link WheelsPIDOutput}</i>
-	 **/
-	private PIDOutput leftPIDOutput;
-
-	private PIDController leftPID;
-	/**
-	 * Left Right PID Output <i>Uses {@link WheelsPIDOutput}</i>
-	 **/
-	private PIDOutput rightPIDOutput;
-	private PIDController rightPID;
-
 
 	/**
 	 * Staight PID Output <i>Uses {@link ArcadeStraightPIDOutput}</i>
@@ -55,6 +50,13 @@ public class DriveController extends Subsystem {
 	 * Averages Encoder values PID Source <i>Uses {@link DriveEncodersPIDSource}</i>
 	 **/
 	private PIDSource avgEncodersPIDSource;
+
+	/*** Left PID Output */
+	private PIDOutput leftPIDOutput;
+	private PIDController leftPID;
+
+	private PIDOutput rightPIDOutput;
+	private PIDController rightPID; 
 
 	/**
 	 * Different types of drive state
@@ -77,42 +79,65 @@ public class DriveController extends Subsystem {
 	 * @param humanControl
 	 *            Get inputs from controllers
 	 **/
-	public DriveController(RobotModel robot, RemoteControl humanControl) {
+	public DriveController(RemoteControl humanControl) {
+		gyro = new AnalogGyro(1);
+		gyro.reset();
+		// Init drive motors
+		leftDriveMotorA = new VictorSP(Ports.LEFT_DRIVE_MOTOR_A_PWM_PORT);
+		leftDriveMotorB = new VictorSP(Ports.LEFT_DRIVE_MOTOR_B_PWM_PORT);
+		rightDriveMotorA = new VictorSP(Ports.RIGHT_DRIVE_MOTOR_A_PWM_PORT);
+		rightDriveMotorB = new VictorSP(Ports.RIGHT_DRIVE_MOTOR_B_PWM_PORT);
+		// Make a Speed Controller group for Drive
+		leftDriveMotors = new SpeedControllerGroup(leftDriveMotorA, leftDriveMotorB);
+		rightDriveMotors = new SpeedControllerGroup(rightDriveMotorA, rightDriveMotorB);
+		rightDriveMotors.setInverted(true); // negative value since wheels are inverted on one side
+		
+		// Initialize drive encoders
+		leftDriveEncoder = new SuperEncoder(Ports.LEFT_DRIVE_ENCODER_PORTS[0], Ports.LEFT_DRIVE_ENCODER_PORTS[1]);
+		rightDriveEncoder = new SuperEncoder(Ports.RIGHT_DRIVE_ENCODER_PORTS[0], Ports.RIGHT_DRIVE_ENCODER_PORTS[1]);
+
+		// Encoder setup
+		leftDriveEncoder.setReverseDirection(false);
+		leftDriveEncoder.setDistancePerPulse(((1.0) / Params.PULSES_PER_ROTATION) * (Params.WHEEL_CIRCUMFERENCE));
+		leftDriveEncoder.setSamplesToAverage(1);
+		rightDriveEncoder.setReverseDirection(false);
+		rightDriveEncoder.setDistancePerPulse(((1.0) / Params.PULSES_PER_ROTATION) * (Params.WHEEL_CIRCUMFERENCE));
+		rightDriveEncoder.setSamplesToAverage(1);
+
+		leftDriveMotorA.setSafetyEnabled(false);
+		leftDriveMotorB.setSafetyEnabled(false);
+		rightDriveMotorA.setSafetyEnabled(false);
+		rightDriveMotorB.setSafetyEnabled(false);
+
+		leftDriveEncoder.setPIDSourceType(PIDSourceType.kDisplacement);
+		leftDriveEncoder.setSamplesToAverage(Params.DRIVE_Y_PID_SAMPLES_AVERAGE);
+		rightDriveEncoder.setPIDSourceType(PIDSourceType.kDisplacement);
+		rightDriveEncoder.setSamplesToAverage(Params.DRIVE_Y_PID_SAMPLES_AVERAGE);
+
 		//Initialize dependencies
-		this.robot = robot;
 		this.humanControl = humanControl;
 		//Create a differential drive that allows us to easily control robot
-		drive = new DifferentialDrive(this.robot.getLeftDriveMotors(), this.robot.getRightDriveMotors());
+		drive = new DifferentialDrive(leftDriveMotors, rightDriveMotors);
 		drive.setSafetyEnabled(false);
 		
 		/* Left and right PID Output */
 
-		leftPIDOutput = new WheelsPIDOutput(RobotModel.Wheels.LeftWheels, this.robot);
-		leftPID = new PIDController(Params.drive_p, Params.drive_i, Params.drive_d, this.robot.getLeftDriveEncoder(),
-				leftPIDOutput);
-		// TODO Might change this to max power variable
-		leftPID.setOutputRange(-1.0, 1.0);
-		leftPID.setAbsoluteTolerance(0.25);
-		leftPID.disable();
 
-		rightPIDOutput = new WheelsPIDOutput(RobotModel.Wheels.RightWheels, this.robot);
+		avgEncodersPIDSource = new DriveEncodersPIDSource(leftDriveEncoder, rightDriveEncoder);
 
-		rightPID = new PIDController(Params.drive_p, Params.drive_i, Params.drive_d, robot.getLeftDriveEncoder(),
-				rightPIDOutput);
-		// TODO Might change this to max power variable
-		rightPID.setOutputRange(-1.0, 1.0);
-		rightPID.setAbsoluteTolerance(0.25);
-		rightPID.disable();
-
-		avgEncodersPIDSource = new DriveEncodersPIDSource(this.robot);
-
-		straightPIDOutput = new ArcadeStraightPIDOutput(drive, this.robot);
+		straightPIDOutput = new ArcadeStraightPIDOutput(drive, leftDriveEncoder, rightDriveEncoder);
 		straightPID = new PIDController(Params.drive_p, Params.drive_i, Params.drive_d, avgEncodersPIDSource,
 				straightPIDOutput);
 		// TODO might change this to max power variable
 		straightPID.setOutputRange(-1.0, 1.0);
 		straightPID.setAbsoluteTolerance(1);
 		straightPID.disable();
+
+		leftPIDOutput = new LeftPIDOutput(leftDriveMotors);
+		leftPID = new PIDController(Params.drive_p, Params.drive_i, Params.drive_d, leftDriveEncoder, leftPIDOutput);
+
+		rightPIDOutput = new RightPIDOutput(rightDriveMotors);
+		rightPID = new PIDController(Params.drive_p, Params.drive_i, Params.drive_d, rightDriveEncoder, rightPIDOutput);
 
 		m_stateVal = DriveState.kInitialize;
 		nextState = DriveState.kInitialize;
@@ -132,8 +157,6 @@ public class DriveController extends Subsystem {
 	public void update() {
 		switch (m_stateVal) {
 		case kInitialize:
-			leftPID.disable();
-			rightPID.disable();
 			nextState = DriveState.kTeleopDrive;
 			break;
 		case kTeleopDrive:
@@ -146,10 +169,7 @@ public class DriveController extends Subsystem {
 			double driverRightY = humanControl.getJoystickValue(RemoteControl.Joysticks.kDriverJoy,
 					RemoteControl.Axes.kRY);
 
-			if (leftPID.isEnabled() || rightPID.isEnabled()) {
-				leftPID.disable();
-				rightPID.disable();
-			}
+			
 
 			arcadeDrive(driverLeftY, driverRightX, true);
 
@@ -229,6 +249,11 @@ public class DriveController extends Subsystem {
 		drive.arcadeDrive(0, 0, false);
 	}
 
+	public double getAverageTotalDistance() {
+		return ((leftDriveEncoder.getTotalDistance() + rightDriveEncoder.getTotalDistance()) / 2);
+	}
+
+
 	/* LEFT PID CONTROLLER */
 
 
@@ -248,47 +273,27 @@ public class DriveController extends Subsystem {
 	}
 
 	/***
-	 * Enables the PID Controller
+	 * Enables the Straight PID Controller
 	 */
 	public void startLeftPID() {
 		leftPID.enable();
 	}
 
 	/***
-	 * Disables the PID Controller
+	 * Disables the left PID Controller
 	 */
 	public void stopLeftPID() {
 		leftPID.disable();
 	}
 
 	/***
-	 * Returns whether the PID Controller has reached target setpoint
+	 * Returns whether the left PID Controller has reached target setpoint
 	 */
 	public boolean leftPIDReachedTarget() {
 		return leftPID.onTarget();
 	}
 
 	/* RIGHT PID CONTROLLER */
-	/***
-	 * Enables the PID Controller
-	 */
-	public void startRightPID() {
-		rightPID.enable();
-	}
-
-	/***
-	 * Disables the PID Controller
-	 */
-	public void stopRightPID() {
-		rightPID.disable();
-	}
-
-	/***
-	 * Returns whether the PID Controller has reached target setpoint
-	 */
-	public boolean rightPIDReachedTarget() {
-		return rightPID.onTarget();
-	}
 
 
 	/***
@@ -305,6 +310,28 @@ public class DriveController extends Subsystem {
 		rightPID.setPID(P, I, D);
 		rightPID.setSetpoint(setpoint);
 	}
+
+	/***
+	 * Enables the right PID Controller
+	 */
+	public void startRightPID() {
+		rightPID.enable();
+	}
+
+	/***
+	 * Disables the right PID Controller
+	 */
+	public void stopRightPID() {
+		rightPID.disable();
+	}
+
+	/***
+	 * Returns whether the right PID Controller has reached target setpoint
+	 */
+	public boolean rightPIDReachedTarget() {
+		return rightPID.onTarget();
+	}
+
 
 	/* STRAIGHT PID CONTROLLER */
 
@@ -345,6 +372,27 @@ public class DriveController extends Subsystem {
 		return straightPID.onTarget();
 	}
 
+	/*** Resets encoders ***/
+	public void resetEncoders() {
+		leftDriveEncoder.reset();
+		rightDriveEncoder.reset();
+
+	}
+
+	/*** Sets Left Drive output ***/
+	public void setLeftMotors(double output) {
+		leftDriveMotors.set(output);
+
+	}
+
+	/*** Sets Right Drive output ***/
+	public void setRightMotors(double output) {
+		rightDriveMotors.set(output);
+	}
+
+	public double getGyroAngle() {
+		return gyro.getAngle();
+	}
 	@Override
 	protected void initDefaultCommand() {
 		// TODO Auto-generated method stub

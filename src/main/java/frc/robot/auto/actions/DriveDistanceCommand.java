@@ -1,8 +1,6 @@
 package frc.robot.auto.actions;
 
 import frc.robot.controllers.DriveController;
-import frc.robot.hardware.RobotModel;
-import frc.robot.MasterController;
 import frc.robot.Params;
 import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.Timer;
@@ -13,7 +11,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class DriveDistanceCommand extends Command {
 
 	private DriveController driveTrain;
-	private RobotModel robot;
 	
 	/*** Distance Setpoint ***/
 	private double distance;
@@ -39,14 +36,12 @@ public class DriveDistanceCommand extends Command {
 	 * @param timeout Allowed time for action to take place
 	 * @param waitForTimeout Whether to wait the full timeout, even if the setpoint is reached
 	 */
-	public DriveDistanceCommand(MasterController controllers, double distance, double maxSpeed, double timeout, boolean waitForTimeout) {
-		requires(controllers.getDriveController());
-		requires(controllers.getRobotModel());
+	public DriveDistanceCommand(DriveController driveController,double distance, double maxSpeed, double timeout, boolean waitForTimeout) {
+		requires(driveController);
 		
-		this.driveTrain = controllers.getDriveController();
+		this.driveTrain = driveController;
 		this.distance = distance;
 		this.timeout = timeout;
-		this.robot = controllers.getRobotModel();
 		this.maxSpeed = maxSpeed;
 		this.waitForTimeout = waitForTimeout;
 		
@@ -98,12 +93,11 @@ public class DriveDistanceCommand extends Command {
 		//Starts Timer
 		start_time = Timer.getFPGATimestamp();
 		//Configures encoders to measuring magnitude, not rate
-		robot.setDriveEncoderPIDSourceType(PIDSourceType.kDisplacement);
 		//Resets encoders
-		robot.resetEncoders();
+		driveTrain.resetEncoders();
 		
-		leftEncoderStartDistance = robot.getLeftDriveEncoderDistance();
-		rightEncoderStartDistance = robot.getRightDriveEncoderDistance();
+		leftEncoderStartDistance = driveTrain.leftDriveEncoder.getDistance();
+		rightEncoderStartDistance = driveTrain.leftDriveEncoder.getDistance();
 		
 		//Sets PID Outputrange, constants, and setpoints
 		

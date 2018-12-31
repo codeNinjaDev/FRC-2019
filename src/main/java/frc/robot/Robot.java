@@ -33,7 +33,6 @@ public class Robot extends IterativeRobot {
 	
 	/*** Initializes all classes ***/
 
-	private RobotModel robot;
 	private RemoteControl humanControl;
 	private DriveController driveController;
 	private VisionController visionController;
@@ -41,22 +40,19 @@ public class Robot extends IterativeRobot {
 	private MotionController motion;
 	private DashboardLogger dashboardLogger;
 	private DashboardInput input;
-	private MasterController masterController;
 	private AutoSelector auto;
 	private Timer timer;
 
 	public Robot() {
 		super();
-		robot = new RobotModel();
 		humanControl = new ControlBoard();
-		driveController = new DriveController(robot, humanControl);
+		driveController = new DriveController(humanControl);
 		visionController = new VisionController();
 		lights = new LightController();
-		motion = new MotionController(robot);
-		dashboardLogger = new DashboardLogger(robot, humanControl, driveController);
+		motion = new MotionController(driveController);
+		dashboardLogger = new DashboardLogger(humanControl, driveController);
 		input  = new DashboardInput();	
-		masterController = new MasterController(driveController, robot, motion, visionController, lights);	
-		auto = new AutoSelector(masterController);
+		auto = new AutoSelector(driveController, motion, visionController, lights);
 		timer = new Timer();
 	}
 
@@ -108,7 +104,7 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousInit() {
 		/*** Reset all hardware ***/
-		robot.reset();
+		driveController.reset();
 		//Reset auto timer
 		//Update robot preferences
 		input.updateInput();
@@ -141,10 +137,8 @@ public class Robot extends IterativeRobot {
 		Scheduler.getInstance().removeAll();
 		//Reset Gyro
 		//robot.resetGyro();
-		//Reset hardware timer
-		robot.resetTimer();
 		//Reset Encoders
-		robot.resetEncoders();
+		driveController.resetEncoders();
 		//Reset Drive
 		driveController.reset();
 		//Update input from Robot Preferences
@@ -185,8 +179,6 @@ public class Robot extends IterativeRobot {
 		//robot.resetGyro();
 		//Reset drive
 		driveController.reset();
-		//Reset hardware
-		robot.reset();
 		//Update input from Dashboard
 		input.updateInput();
 		//Log Data

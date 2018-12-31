@@ -4,13 +4,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import frc.robot.Params;
-import frc.robot.controllers.DriveController;
-import frc.robot.hardware.RobotModel;
-import frc.robot.MasterController;
+
 import frc.robot.controllers.MotionController;
 
-import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -18,7 +14,6 @@ import jaci.pathfinder.Trajectory;
 /*** Autonomous Action that follows trajectory ***/
 public class PathFollowerCommand extends Command{
 	private MotionController motion;
-	private RobotModel robot;
 	private double timeout, start_time;
 	/****
 	 * Constructor for PathFollower Action
@@ -26,12 +21,10 @@ public class PathFollowerCommand extends Command{
 	 * @param trajectory Pathfinder @jaci Trajectory to follow
 	 * @param timeout Time allowed to follow path
 	 */
-	public PathFollowerCommand(MasterController controllers, Trajectory trajectory, double timeout) {
-		requires(controllers.getMotionController());
-		requires(controllers.getRobotModel());
+	public PathFollowerCommand(MotionController motion, Trajectory trajectory, double timeout) {
+		requires(motion);
 		
-		this.motion = controllers.getMotionController();
-		this.robot = controllers.getRobotModel();
+		this.motion = motion;
 		this.timeout = timeout;
 		SmartDashboard.putString("MOTIONPROFILING", "SETTING_UP");
 		//Sets up configuration, modifiers, and encoder followers
@@ -63,10 +56,7 @@ public class PathFollowerCommand extends Command{
 	public void initialize() {
 		//Starts timer
 		start_time = Timer.getFPGATimestamp();
-		//Sets up sensors
-		robot.setDriveEncoderPIDSourceType(PIDSourceType.kDisplacement);
-		///robot.resetGyro();
-		robot.resetEncoders();
+		
 		//Starts following path
 		motion.enable();
 		ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(5);

@@ -2,12 +2,6 @@ package frc.robot.auto.actions;
 
 import frc.robot.Params;
 import frc.robot.controllers.DriveController;
-import frc.robot.hardware.RobotModel;
-import frc.robot.MasterController;
-
-import javax.security.auth.login.Configuration;
-
-import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -15,7 +9,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 /*** Drive Forward action that uses arcade drive **/
 public class ArcadeStraightCommand extends Command {
 	private DriveController driveTrain;
-	private RobotModel robot;
 	/*** Instance variable for desired distance ***/
 	private double distance;
 	/*** Instance variable or allowed timeout ***/
@@ -59,14 +52,12 @@ public class ArcadeStraightCommand extends Command {
 	 *            (Doesn't do anything currently)
 	 * 
 	 */
-	public ArcadeStraightCommand(MasterController controllers, double distance, double maxSpeed, double timeout, double timeAfterHit) {
-		requires(controllers.getDriveController());
-		requires(controllers.getRobotModel());
+	public ArcadeStraightCommand(DriveController driveController, double distance, double maxSpeed, double timeout, double timeAfterHit) {
+		requires(driveController);
 
-		this.driveTrain = controllers.getDriveController();
+		this.driveTrain = driveController;
 		this.distance = distance;
 		this.timeout = timeout;
-		this.robot = controllers.getRobotModel();
 		this.maxSpeed = maxSpeed;
 		this.timeAfterHit = timeAfterHit;
 		start_time = 0;
@@ -88,13 +79,11 @@ public class ArcadeStraightCommand extends Command {
 		// Starts the timer
 		start_time = Timer.getFPGATimestamp();
 
-		// Configures encoders to measuring magnitude, not rate
-		robot.setDriveEncoderPIDSourceType(PIDSourceType.kDisplacement);
 		// Reset Encoders before startng
-		robot.resetEncoders();
+		driveTrain.resetEncoders();
 
-		leftEncoderStartDistance = robot.getLeftDriveEncoderDistance();
-		leftEncoderStartDistance = robot.getRightDriveEncoderDistance();
+		leftEncoderStartDistance = driveTrain.leftDriveEncoder.getDistance();
+		rightEncoderStartDistance = driveTrain.leftDriveEncoder.getDistance();
 		// Set Output range and PID Constants
 		driveTrain.configureStraightPID(maxSpeed, P, I, D, distance);
 		// Starts arcade PID staright
@@ -118,8 +107,6 @@ public class ArcadeStraightCommand extends Command {
 	}
 
 	protected void end() {
-		driveTrain.stopLeftPID();
-		driveTrain.stopRightPID();
 		driveTrain.stopStraightPID();
 	}
 
