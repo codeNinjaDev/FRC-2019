@@ -13,8 +13,8 @@ public class Odometry {
 
     public void update() {
         currDistance = driveController.getAverageTotalDistance() - prevDistance;
-        currX = prevX + currDistance*Math.cos(driveController.getGyroAngle());
-        currY = prevY + currDistance*Math.sin(driveController.getGyroAngle());
+        currX = prevX + currDistance*Math.cos(driveController.getTotalGyroAngle());
+        currY = prevY + currDistance*Math.sin(driveController.getTotalGyroAngle());
 
         prevX = currX;
         prevY = currY;

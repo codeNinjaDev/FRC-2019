@@ -157,9 +157,10 @@ public class MotionController extends Subsystem {
 	public void enable() {
 		//Sets enabled to true
 		isEnabled = true;
+
 		//Configures Encoders
-		left.configureEncoder(driveController.leftDriveEncoder.get(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
-		right.configureEncoder(driveController.rightDriveEncoder.get(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
+		left.configureEncoder(driveController.leftDriveEncoder.getTotalTicks(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
+		right.configureEncoder(driveController.rightDriveEncoder.getTotalTicks(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
 		//Configure PIDVA Constants
 		left.configurePIDVA(Params.kp, Params.ki, Params.kd, Params.kv, Params.ka);
 		right.configurePIDVA(Params.kp, Params.ki, Params.kd, Params.kv, Params.ka);
@@ -179,10 +180,10 @@ public class MotionController extends Subsystem {
 		// If we are enabled and the profile isn't finished
 		if (isEnabled && !isProfileFinished()) {
 			//TODO check if get() or getRaw()
-			double l = left.calculate(driveController.leftDriveEncoder.get());
-			double r = right.calculate(driveController.rightDriveEncoder.get());
+			double l = left.calculate(driveController.leftDriveEncoder.getTotalTicks());
+			double r = right.calculate(driveController.rightDriveEncoder.getTotalTicks());
 
-			double gyro_heading = 0; //TODO robot.getAngle();
+			double gyro_heading = driveController.getTotalGyroAngle(); 
 
 			double desired_heading = Pathfinder.r2d(left.getHeading());
 			//Bound Half Degrees and next line just bounds to -180 180

@@ -1,14 +1,14 @@
 package frc.robot.hardware;
 
-import edu.wpi.first.wpilibj.AccumulatorResult;
+import edu.wpi.first.hal.AccumulatorResult;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.hal.AnalogJNI;
-import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
-import edu.wpi.first.wpilibj.hal.HAL;
+import edu.wpi.first.hal.AnalogJNI;
+import edu.wpi.first.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.hal.HAL;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
-import edu.wpi.first.wpilibj.util.AllocationException;
+import edu.wpi.first.hal.util.AllocationException;
 
 public class AbsoluteEncoder extends AnalogInput{
 	
@@ -27,13 +27,11 @@ public class AbsoluteEncoder extends AnalogInput{
 	   */
 	   public AbsoluteEncoder(final int channel) {
 		    super(channel);
-		    checkAnalogInputChannel(channel);
 		    m_channel = channel;
 
-		    final int portHandle = AnalogJNI.getPort((byte) channel);
-		    //m_port = AnalogJNI.initializeAnalogInputPort(portHandle);
+				//m_port = AnalogJNI.initializeAnalogInputPort(portHandle);
 		    //temp
-		    m_port = 0;
+		    m_port = channel;
 		    
 		    HAL.report(tResourceType.kResourceType_AnalogChannel, channel);
 		    setName("AnalogInput", channel);

@@ -2,7 +2,6 @@ package frc.robot.controllers;
 
 import frc.robot.Params;
 import frc.robot.pid.*;
-import frc.robot.hardware.RemoteControl;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.VictorSP;
@@ -15,6 +14,8 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.*;
 import frc.robot.hardware.*;
+import com.kauailabs.navx.frc.AHRS;
+
 /**
  * TODO make this comment better: Handles both teleoperated and autonomus
  * driving
@@ -32,7 +33,7 @@ public class DriveController extends Subsystem {
 	/*** Drive Encoder ***/
 	public SuperEncoder leftDriveEncoder, rightDriveEncoder;
 
-	private AnalogGyro gyro;
+	private SuperGyro gyro;
 	// Handles the math for arcade, curvature, and tank drive
 	private DifferentialDrive drive;
 	private RemoteControl humanControl;
@@ -80,7 +81,7 @@ public class DriveController extends Subsystem {
 	 *            Get inputs from controllers
 	 **/
 	public DriveController(RemoteControl humanControl) {
-		gyro = new AnalogGyro(1);
+		gyro = new SuperGyro(I2C.Port.kMXP);
 		gyro.reset();
 		// Init drive motors
 		leftDriveMotorA = new VictorSP(Ports.LEFT_DRIVE_MOTOR_A_PWM_PORT);
@@ -392,6 +393,10 @@ public class DriveController extends Subsystem {
 
 	public double getGyroAngle() {
 		return gyro.getAngle();
+	}
+
+	public double getTotalGyroAngle() {
+		return gyro.getTotalAngle();
 	}
 	@Override
 	protected void initDefaultCommand() {

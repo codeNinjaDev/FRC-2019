@@ -1,23 +1,23 @@
 package frc.robot.hardware;
 
+import edu.wpi.first.hal.AnalogJNI;
+import edu.wpi.first.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.hal.HAL;
 import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.RobotState;
-import edu.wpi.first.wpilibj.hal.AnalogJNI;
-import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
-import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public class TenTurnPotentiometer{
-	
+public class TenTurnPotentiometer {
+
 	  private static final int kAccumulatorSlot = 1;
 	  int m_port; // explicit no modifier, private and package accessible.
-	  private int m_channel;
-	  private static final int[] kAccumulatorChannels = {0, 1};
-	  //Gear 4 to 1 ratio
-	  private static final int VOLT_TO_DEGREES = 720/4;
-	  double starting_error;
-	  protected PIDSourceType m_pidSource = PIDSourceType.kDisplacement;
+	private int m_channel;
+	private static final int[] kAccumulatorChannels = { 0, 1 };
+	// Gear 4 to 1 ratio
+	private static final int VOLT_TO_DEGREES = 720 / 4;
+	double starting_error;
+	protected PIDSourceType m_pidSource = PIDSourceType.kDisplacement;
 
 	  /**
 	   * Construct an analog channel.
@@ -26,7 +26,7 @@ public class TenTurnPotentiometer{
 	   */
 	   public TenTurnPotentiometer(final int channel) {
 		    m_channel = channel;
-		    final int portHandle = AnalogJNI.getPort((byte) channel);
+				final int portHandle = HAL.getPort((byte) channel);
 		    m_port = AnalogJNI.initializeAnalogInputPort(portHandle);
 		    //temp
 		    starting_error = (getAverageVoltage() * VOLT_TO_DEGREES);

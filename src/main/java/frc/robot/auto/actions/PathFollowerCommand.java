@@ -42,7 +42,7 @@ public class PathFollowerCommand extends Command{
 	@Override
 	/*** Runs in loop and updates PIDVA motion pid controller ***/
 	public void execute() {
-		
+		motion.update();
 	}
 
 	@Override
@@ -59,19 +59,6 @@ public class PathFollowerCommand extends Command{
 		
 		//Starts following path
 		motion.enable();
-		ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(5);
-
-		Runnable motionRunnable = new Runnable() {
-			
-			public void run() {
-				motion.update();
-				if (motion.isProfileFinished() || (Timer.getFPGATimestamp() >= start_time + timeout)) {
-					scheduledExecutorService.shutdown();
-				}
-			}
-		};
-		
-		scheduledExecutorService.scheduleAtFixedRate(motionRunnable, 0, 20, TimeUnit.MILLISECONDS);
 	}
 
 	protected void interrupted() {
