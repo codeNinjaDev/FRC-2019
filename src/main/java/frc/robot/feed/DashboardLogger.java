@@ -2,6 +2,7 @@ package frc.robot.feed;
 
 import frc.robot.Params;
 import frc.robot.controllers.DriveController;
+import frc.robot.controllers.MotionController;
 import frc.robot.hardware.RemoteControl;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -10,10 +11,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class DashboardLogger {
 	private RemoteControl humanControl;
 	private DriveController driveController;
-
-	public DashboardLogger(RemoteControl humanControl, DriveController driveController) {
+	private MotionController motion;
+	public DashboardLogger(RemoteControl humanControl, DriveController driveController, MotionController motion) {
 		this.humanControl = humanControl;
 		this.driveController = driveController;
+		this.motion = motion;
 		if(DriverStation.getInstance().isFMSAttached()) {
 			putMatchInfo();
 		}
@@ -116,6 +118,8 @@ public class DashboardLogger {
 		SmartDashboard.putNumber("WHEEL_BASE_WIDTH", Params.wheel_base_width);
 		SmartDashboard.putNumber("X_SPEED_MULTIPLIER", Params.GLOBAL_X_DRIVE_SPEED_MULTIPLIER);
 		SmartDashboard.putNumber("Y_SPEED_MULTIPLIER", Params.GLOBAL_Y_DRIVE_SPEED_MULTIPLIER);
+	
+		SmartDashboard.putBoolean("Profile Finished", motion.isProfileFinished());
 	}
 	
 	
@@ -126,7 +130,7 @@ public class DashboardLogger {
 		SmartDashboard.putNumber("RIGHT_ENC_DISTANCE", driveController.rightDriveEncoder.getDistance());
 		SmartDashboard.putNumber("LEFT_ENC_VELOCITY", driveController.leftDriveEncoder.getRate());
 		SmartDashboard.putNumber("RIGHT_ENC_VELOCITY", driveController.rightDriveEncoder.getRate());
-		
+		SmartDashboard.putNumber("GYRO_ANGLE", driveController.getGyroAngle());
 
 		
 		

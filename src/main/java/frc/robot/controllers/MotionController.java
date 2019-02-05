@@ -2,7 +2,6 @@ package frc.robot.controllers;
 
 import java.io.File;
 
-
 import frc.robot.Params;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Subsystem;
@@ -84,21 +83,27 @@ public class MotionController extends Subsystem {
 	 */
 	public EncoderFollower right;
 	private boolean isEnabled;
-	
+
 	/** Gets RobotModel object and sets boolean isEnabled to false **/
 	public MotionController(DriveController driveController) {
 		this.driveController = driveController;
 		isEnabled = false;
-		
+		isProfileFinished = false;
+
+
 	}
-	/** Sets up config, trajectory, tank modifier, and encoderFollowers using an array of Waypoints **/
+
+	/**
+	 * Sets up config, trajectory, tank modifier, and encoderFollowers using an
+	 * array of Waypoints
+	 **/
 	public void setUp(Waypoint[] points) {
-		//Takes in points
+		// Takes in points
 		this.points = points;
-		//Configures Trajectory based off of Time Step and Kinematics
+		// Configures Trajectory based off of Time Step and Kinematics
 		config = new Trajectory.Config(Trajectory.FitMethod.HERMITE_CUBIC, Trajectory.Config.SAMPLES_HIGH, Params.dt,
 				Params.maximum_velocity, Params.maximum_acceleration, Params.maximum_jerk);
-		//Generates trajectory
+		// Generates trajectory
 		trajectory = Pathfinder.generate(points, config);
 
 		// Sets up Modifier and encoder followers from @jaci
@@ -107,29 +112,31 @@ public class MotionController extends Subsystem {
 		right = new EncoderFollower(modifier.getRightTrajectory());
 	}
 
-	/** Sets up tank modifier, and encoderFollowers using an already made trajectory **/
+	/**
+	 * Sets up tank modifier, and encoderFollowers using an already made trajectory
+	 **/
 
 	public void setUp(Trajectory trajectoryInput) {
 		SmartDashboard.putString("MOTION_PROFILING", "SETUPSTART");
-
+		
+		isProfileFinished = false;
 		trajectory = trajectoryInput;
-		SmartDashboard.putString("MOTION_PROFILING", "trajectory");
-		SmartDashboard.putString("Modifier", "STARTING");
+		
 
 		// TODO find distance between front and rear axles of a vehicle
 		modifier = new TankModifier(trajectory).modify(Params.wheel_base_width);
-		SmartDashboard.putString("Modifier", "Done");
+		
 
 		left = new EncoderFollower(modifier.getLeftTrajectory());
-		SmartDashboard.putString("Modifier", "Left");
 
 		right = new EncoderFollower(modifier.getRightTrajectory());
-		SmartDashboard.putString("Modifier", "Right");
 
 	}
+
 	/** Sets up trajectory, tank modifier, and encoderFollowers using a CSV file **/
 
 	public void setUp(File trajectoryCSV) {
+		isProfileFinished = false;
 
 		trajectory = Pathfinder.readFromCSV(trajectoryCSV);
 
@@ -138,37 +145,40 @@ public class MotionController extends Subsystem {
 		left = new EncoderFollower(modifier.getLeftTrajectory());
 		right = new EncoderFollower(modifier.getRightTrajectory());
 	}
+
 	/** Static function that returns a trajectory given an array of waypoints **/
 	public static Trajectory generateTrajectory(Waypoint[] points) {
-		
-		SmartDashboard.putString("PATH_GENERATING", "CALCULATING");
-		
-		Trajectory.Config config = new Trajectory.Config(Trajectory.FitMethod.HERMITE_CUBIC,
+
+
+		Trajectory.Config configuration = new Trajectory.Config(Trajectory.FitMethod.HERMITE_CUBIC,
 				Trajectory.Config.SAMPLES_HIGH, Params.dt, Params.maximum_velocity, Params.maximum_acceleration,
 				Params.maximum_jerk);
+		Trajectory staticTrajectory = Pathfinder.generate(points, configuration);
 		
-		
-		Trajectory traj = Pathfinder.generate(points, config);;
-		SmartDashboard.putString("PATH_GENERATING", "DONE");
 
-		return traj;
+		
+		return staticTrajectory;
 	}
+
 	/** Enables motion profiling **/
 	public void enable() {
-		//Sets enabled to true
+		left.reset();
+		right.reset();
+		// Sets enabled to true
+		isProfileFinished = false;
 		isEnabled = true;
-
-		//Configures Encoders
-		left.configureEncoder(driveController.leftDriveEncoder.getTotalTicks(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
-		right.configureEncoder(driveController.rightDriveEncoder.getTotalTicks(), (int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
-		//Configure PIDVA Constants
+		// Configures Encoders
+		left.configureEncoder(driveController.leftDriveEncoder.getTotalTicks(),
+				(int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
+		right.configureEncoder(driveController.rightDriveEncoder.getTotalTicks(),
+				(int) Math.round(Params.PULSES_PER_ROTATION), Params.WHEEL_DIAMETER);
+		// Configure PIDVA Constants
 		left.configurePIDVA(Params.kp, Params.ki, Params.kd, Params.kv, Params.ka);
 		right.configurePIDVA(Params.kp, Params.ki, Params.kd, Params.kv, Params.ka);
 
-
 	}
-	
-	//Returns true if profile finished
+
+	// Returns true if profile finished
 	public boolean isProfileFinished() {
 		return isProfileFinished;
 	}
@@ -179,41 +189,48 @@ public class MotionController extends Subsystem {
 		double deltaTime = Timer.getFPGATimestamp();
 		// If we are enabled and the profile isn't finished
 		if (isEnabled && !isProfileFinished()) {
-			//TODO check if get() or getRaw()
+			// TODO check if get() or getRaw()
 			double l = left.calculate(driveController.leftDriveEncoder.getTotalTicks());
 			double r = right.calculate(driveController.rightDriveEncoder.getTotalTicks());
 
-			double gyro_heading = driveController.getTotalGyroAngle(); 
+			double gyro_heading = driveController.getTotalGyroAngle();
 
 			double desired_heading = Pathfinder.r2d(left.getHeading());
-			//Bound Half Degrees and next line just bounds to -180 180
+			// Bound Half Degrees and next line just bounds to -180 180
 			double angleDifference = Pathfinder.boundHalfDegrees(desired_heading - gyro_heading);
 			double turn = 0.8 * (-1.0 / 80) * angleDifference;
 			driveController.setLeftMotors(l + turn);
 			driveController.setRightMotors(r - turn);
-	        
-
-	        if (left.isFinished() && right.isFinished()) {
-	            isProfileFinished = true;
-	        }
+			
+			if (left.isFinished() && right.isFinished()) {
+				isProfileFinished = true;
+			}
 		}
-		
+
 		deltaTime = Timer.getFPGATimestamp() - deltaTime;
 		SmartDashboard.putNumber("Update Interation", deltaTime);
 
 	}
+
 	/** Stops motion profiling **/
 	public void disable() {
 		isEnabled = false;
+		
 		driveController.setLeftMotors(0);
 		driveController.setRightMotors(0);
+		isProfileFinished = true;
 	}
+
 	@Override
 	protected void initDefaultCommand() {
 		// TODO Auto-generated method stub
-		
+
 	}
-	
-	
+
+	public void reset() {
+		isEnabled = false;
+		
+		isProfileFinished = false;
+	}
 
 }

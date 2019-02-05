@@ -14,6 +14,9 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.*;
 import frc.robot.hardware.*;
+import frc.robot.hardware.SuperEncoder;
+import frc.robot.pid.*;
+import frc.robot.controllers.*;
 import com.kauailabs.navx.frc.AHRS;
 
 /**
@@ -45,19 +48,25 @@ public class DriveController extends Subsystem {
 	/**
 	 * Staight PID Output <i>Uses {@link ArcadeStraightPIDOutput}</i>
 	 **/
-	private PIDOutput straightPIDOutput;
+	private ArcadeStraightPIDOutput straightPIDOutput;
 	private PIDController straightPID;
 	/**
 	 * Averages Encoder values PID Source <i>Uses {@link DriveEncodersPIDSource}</i>
 	 **/
-	private PIDSource avgEncodersPIDSource;
+	private DriveEncodersPIDSource avgEncodersPIDSource;
 
 	/*** Left PID Output */
-	private PIDOutput leftPIDOutput;
+	private LeftPIDOutput leftPIDOutput;
 	private PIDController leftPID;
 
-	private PIDOutput rightPIDOutput;
+	private RightPIDOutput rightPIDOutput;
 	private PIDController rightPID; 
+
+	private VisionPIDSource visionSource;
+	private DriveRotateMotorsPIDOutput visionOutput;
+	private PIDController visionPID;
+
+	private VisionController vision;
 
 	/**
 	 * Different types of drive state
@@ -80,9 +89,11 @@ public class DriveController extends Subsystem {
 	 * @param humanControl
 	 *            Get inputs from controllers
 	 **/
-	public DriveController(RemoteControl humanControl) {
-		gyro = new SuperGyro(I2C.Port.kMXP);
-		gyro.reset();
+	public DriveController(RemoteControl humanControl, VisionController vision) {
+		this.vision = vision;
+
+		gyro = new SuperGyro(SPI.Port.kMXP);
+		gyro.hardReset();
 		// Init drive motors
 		leftDriveMotorA = new VictorSP(Ports.LEFT_DRIVE_MOTOR_A_PWM_PORT);
 		leftDriveMotorB = new VictorSP(Ports.LEFT_DRIVE_MOTOR_B_PWM_PORT);
@@ -91,17 +102,16 @@ public class DriveController extends Subsystem {
 		// Make a Speed Controller group for Drive
 		leftDriveMotors = new SpeedControllerGroup(leftDriveMotorA, leftDriveMotorB);
 		rightDriveMotors = new SpeedControllerGroup(rightDriveMotorA, rightDriveMotorB);
-		rightDriveMotors.setInverted(true); // negative value since wheels are inverted on one side
 		
 		// Initialize drive encoders
 		leftDriveEncoder = new SuperEncoder(Ports.LEFT_DRIVE_ENCODER_PORTS[0], Ports.LEFT_DRIVE_ENCODER_PORTS[1]);
 		rightDriveEncoder = new SuperEncoder(Ports.RIGHT_DRIVE_ENCODER_PORTS[0], Ports.RIGHT_DRIVE_ENCODER_PORTS[1]);
 
 		// Encoder setup
-		leftDriveEncoder.setReverseDirection(false);
+		leftDriveEncoder.setReverseDirection(true);
 		leftDriveEncoder.setDistancePerPulse(((1.0) / Params.PULSES_PER_ROTATION) * (Params.WHEEL_CIRCUMFERENCE));
 		leftDriveEncoder.setSamplesToAverage(1);
-		rightDriveEncoder.setReverseDirection(false);
+		rightDriveEncoder.setReverseDirection(true);
 		rightDriveEncoder.setDistancePerPulse(((1.0) / Params.PULSES_PER_ROTATION) * (Params.WHEEL_CIRCUMFERENCE));
 		rightDriveEncoder.setSamplesToAverage(1);
 
@@ -136,9 +146,29 @@ public class DriveController extends Subsystem {
 
 		leftPIDOutput = new LeftPIDOutput(leftDriveMotors);
 		leftPID = new PIDController(Params.drive_p, Params.drive_i, Params.drive_d, leftDriveEncoder, leftPIDOutput);
+	
+		leftPID.setOutputRange(-1.0, 1.0);
+		leftPID.setAbsoluteTolerance(1);
+		leftPID.disable();
 
 		rightPIDOutput = new RightPIDOutput(rightDriveMotors);
 		rightPID = new PIDController(Params.drive_p, Params.drive_i, Params.drive_d, rightDriveEncoder, rightPIDOutput);
+
+		rightPID.setOutputRange(-1.0, 1.0);
+		rightPID.setAbsoluteTolerance(1);
+		rightPID.disable();
+
+		visionSource = new VisionPIDSource(vision, gyro);
+		visionOutput = new DriveRotateMotorsPIDOutput(drive);
+		visionPID = new PIDController(.011, 0.00012, 0.008, visionSource, visionOutput);
+
+		visionPID.setOutputRange(-0.22, 0.22);
+		visionPID.setAbsoluteTolerance(.25);
+		visionPID.setSetpoint(0);
+
+		visionPID.disable();
+
+
 
 		m_stateVal = DriveState.kInitialize;
 		nextState = DriveState.kInitialize;
@@ -170,9 +200,35 @@ public class DriveController extends Subsystem {
 			double driverRightY = humanControl.getJoystickValue(RemoteControl.Joysticks.kDriverJoy,
 					RemoteControl.Axes.kRY);
 
-			
-
-			arcadeDrive(driverLeftY, driverRightX, true);
+			/*if(humanControl.getOuttakeDesired()) {
+				visionPID.setSetpoint(vision.targetYaw());
+				gyro.reset();
+			}*/
+			SmartDashboard.putBoolean("GYRO?", gyro.isConnected());
+			if(humanControl.getIntakeDesired()) {
+				visionPID.setPID(.05, 0.0001, 0.08);
+				visionPID.enable();
+				SmartDashboard.putNumber("GYRO VISION ANGLE", gyro.getAngle());
+				if(vision.targetYaw() != 0) {
+					arcadeDrive(driverLeftY, -visionPID.get(), false);
+				} else {
+					arcadeDrive(driverLeftY,driverRightX, false);
+				}
+				
+			} else if(humanControl.getOuttakeDesired()) {
+				visionPID.setPID(.05, 0.00016, 0.008);
+				visionPID.enable();
+				SmartDashboard.putNumber("GYRO VISION ANGLE", gyro.getAngle());
+				if(vision.targetYaw() != 0) {
+					arcadeDrive(driverLeftY, -visionPID.get(), false);
+				} else {
+					arcadeDrive(driverLeftY,driverRightX, false);
+				}
+				
+			} else {
+				visionPID.disable();
+				arcadeDrive(driverLeftY, driverRightX, true);
+			}
 
 			nextState = DriveState.kTeleopDrive;
 			break;
@@ -268,6 +324,7 @@ public class DriveController extends Subsystem {
 	 * @param setpoint The target that the PID Controller should reach
 	 */
 	public void configureLeftPID(double maxOutput, double P, double I, double D, double setpoint) {
+		leftPID.setAbsoluteTolerance(1);
 		leftPID.setOutputRange(-maxOutput, maxOutput);
 		leftPID.setPID(P, I, D);
 		leftPID.setSetpoint(setpoint);
@@ -307,6 +364,7 @@ public class DriveController extends Subsystem {
 	 * @param setpoint The target that the PID Controller should reach
 	 */
 	public void configureRightPID(double maxOutput, double P, double I, double D, double setpoint) {
+		rightPID.setAbsoluteTolerance(1);
 		rightPID.setOutputRange(-maxOutput, maxOutput);
 		rightPID.setPID(P, I, D);
 		rightPID.setSetpoint(setpoint);
@@ -347,6 +405,7 @@ public class DriveController extends Subsystem {
 	 * @param setpoint The target that the PID Controller should reach
 	 */
 	public void configureStraightPID(double maxOutput, double P, double I, double D, double setpoint) {
+		straightPID.setAbsoluteTolerance(1);
 		straightPID.setOutputRange(-maxOutput, maxOutput);
 		straightPID.setPID(P, I, D);
 		straightPID.setSetpoint(setpoint);
@@ -388,7 +447,7 @@ public class DriveController extends Subsystem {
 
 	/*** Sets Right Drive output ***/
 	public void setRightMotors(double output) {
-		rightDriveMotors.set(output);
+		rightDriveMotors.set(-output);
 	}
 
 	public double getGyroAngle() {

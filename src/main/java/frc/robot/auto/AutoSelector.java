@@ -5,6 +5,7 @@ import frc.robot.controllers.LightController;
 import frc.robot.controllers.MotionController;
 import frc.robot.controllers.VisionController;
 import edu.wpi.first.wpilibj.command.CommandGroup;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -30,12 +31,11 @@ public class AutoSelector {
 	} 
 	/*** Lists the auto routines on SmartDashboard ***/
 	public void listOptions() {
-		autoChooser.addDefault("Nothing (Default)", new DoNothingRoutine());
-		autoChooser.addObject("Pass Auto Line (Drive 100)", new PassAutoLineRoutine(driveController));
-		autoChooser.addObject("Custom Routine (check preferences)", new CustomDistanceRoutine(driveController));
-		autoChooser.addObject("Motion Profling Routine", new MotionRoutine(motion));
-
-		SmartDashboard.putData(autoChooser);
+		autoChooser.setDefaultOption("Nothing (Default)", new DoNothingRoutine());
+		autoChooser.addOption("Pass Auto Line (Drive 100)", new PassAutoLineRoutine(driveController));
+		autoChooser.addOption("Custom Routine (check preferences)", new CustomDistanceRoutine(driveController));
+		autoChooser.addOption("Motion Profling Routine", new MotionRoutine(motion));
+		Shuffleboard.getTab("Autonomous").add("Autonomous Commands", autoChooser);
 	}
 	
 	/*** Get selected Auto ***/

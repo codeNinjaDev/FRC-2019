@@ -4,13 +4,15 @@ import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.PIDSourceType;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SerialPort;
 
 /*** Encoder Class that keeps track of total angle even when reset unless hard reset*/
 public class SuperGyro extends AHRS {
     private double offsetAngle;
     private PIDSourceType m_pidSource;
 
-    public SuperGyro(I2C.Port port) {
+    public SuperGyro(SPI.Port port) {
         super(port);
         offsetAngle = 0;
         m_pidSource = PIDSourceType.kDisplacement;

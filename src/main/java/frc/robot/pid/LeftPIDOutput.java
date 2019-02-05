@@ -1,6 +1,7 @@
 package frc.robot.pid;
 
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.PIDOutput;
@@ -14,6 +15,7 @@ public class LeftPIDOutput implements PIDOutput {
 	}
 	@Override
 	public void pidWrite(double output) {
+		SmartDashboard.putNumber("PID Output", output);
 		driveSide.set(output);
 	}
 	

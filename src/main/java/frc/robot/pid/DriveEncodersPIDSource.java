@@ -1,15 +1,15 @@
 package frc.robot.pid;
 
-
 import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.PIDSourceType;
+import frc.robot.hardware.SuperEncoder;
 import edu.wpi.first.wpilibj.Encoder;
 
 /*** PID Source for Driving with Encoders ***/
 public class DriveEncodersPIDSource implements PIDSource {
-	private Encoder leftDriveEncoder, rightDriveEncoder;
+	private SuperEncoder leftDriveEncoder, rightDriveEncoder;
 	/*** Averages encoder values and returns them to PID Controller ***/
-	public DriveEncodersPIDSource(Encoder leftDriveEncoder, Encoder rightDriveEncoder) {
+	public DriveEncodersPIDSource(SuperEncoder leftDriveEncoder, SuperEncoder rightDriveEncoder) {
 		leftDriveEncoder = this.leftDriveEncoder;
 		rightDriveEncoder = this.rightDriveEncoder;
 	}

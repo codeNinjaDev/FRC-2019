@@ -49,7 +49,9 @@ public class PathFollowerCommand extends Command{
 	/*** Disables motion profiling when finished ***/
 	public void end() {
 		motion.disable();
+		SmartDashboard.putBoolean("Profile Command Finished", true);
 	}
+
 
 	@Override
 	/*** Starts Profile following ***/

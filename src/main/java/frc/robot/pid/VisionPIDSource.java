@@ -1,27 +1,32 @@
 package frc.robot.pid;
 
+import edu.wpi.first.wpilibj.PIDSource;
+import edu.wpi.first.wpilibj.PIDSourceType;
 import frc.robot.controllers.VisionController;
 /*
  * TODO Learn how to make camera a pid source
 import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.PIDSourceType;*/
+import frc.robot.hardware.SuperGyro;
 
-public class VisionPIDSource {
+public class VisionPIDSource implements PIDSource {
 	private VisionController vision;
-	public VisionPIDSource(VisionController vision) {
+	private SuperGyro gyro;
+	public VisionPIDSource(VisionController vision, SuperGyro gyro) {
+		this.gyro = gyro;
 		this.vision = vision;
 	}
 	
-/*	@Override
+	@Override
 	public PIDSourceType getPIDSourceType() {
-		return robot.camera.pu;
+		return PIDSourceType.kDisplacement;
 		//TODO Add right encoder somehow
 	}
 	@Override
 	public double pidGet() {
 		switch (getPIDSourceType()) {
 	    case kDisplacement:
-	      return getAverageDistance();
+	      return vision.targetYaw();
 	    case kRate:
 	      return 0.0;
 	    default:
@@ -29,10 +34,11 @@ public class VisionPIDSource {
 	  }
 	}
 
+
+
 	@Override
 	public void setPIDSourceType(PIDSourceType pidSource) {
-		robot.leftDriveEncoder.setPIDSourceType(PIDSourceType.kRate);
-		robot.rightDriveEncoder.setPIDSourceType(PIDSourceType.kRate);		
-	}*/
+		gyro.setPIDSourceType(pidSource);
+	}
 
 }

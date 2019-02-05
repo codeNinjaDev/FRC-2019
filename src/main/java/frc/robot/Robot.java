@@ -16,8 +16,10 @@ import frc.robot.feed.*;
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.hal.sim.DriverStationSim;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,7 +31,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * creating this project, you must also update the manifest file in the resource
  * directory.
  */
-public class Robot extends IterativeRobot {
+public class Robot extends TimedRobot {
 	
 	/*** Initializes all classes ***/
 
@@ -41,19 +43,23 @@ public class Robot extends IterativeRobot {
 	private DashboardLogger dashboardLogger;
 	private DashboardInput input;
 	private AutoSelector auto;
-	private Timer timer;
-
+	private Timer visionTimer;
+	private Odometry odometry;
 	public Robot() {
 		super();
+		visionTimer = new Timer();
+
 		humanControl = new ControlBoard();
-		driveController = new DriveController(humanControl);
-		visionController = new VisionController();
+		visionController = new VisionController(humanControl, visionTimer);
+
+		driveController = new DriveController(humanControl, visionController);
 		lights = new LightController();
 		motion = new MotionController(driveController);
-		dashboardLogger = new DashboardLogger(humanControl, driveController);
+		dashboardLogger = new DashboardLogger(humanControl, driveController, motion);
 		input  = new DashboardInput();	
 		auto = new AutoSelector(driveController, motion, visionController, lights);
-		timer = new Timer();
+		odometry = new Odometry(driveController, visionTimer);
+
 	}
 
 
@@ -63,6 +69,22 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
+		new Thread(() -> {
+			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+			camera.setResolution(240, 180);
+			
+			CvSink cvSink = CameraServer.getInstance().getVideo();
+			CvSource outputStream = CameraServer.getInstance().putVideo("DriverCam", 240, 180);
+			
+			Mat source = new Mat();
+			Mat output = new Mat();
+			
+			while(!Thread.interrupted()) {
+				cvSink.grabFrame(source);
+				Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
+				outputStream.putFrame(output);
+			}
+		}).start();
 
 		// Sets enabled lights
 		lights.setEnabledLights();
@@ -72,27 +94,7 @@ public class Robot extends IterativeRobot {
 		//Updates input from Robot Preferences
 		input.updateInput();
 
-		/*** Starts camera stream ***/
-		new Thread(() -> {
-			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
-            
-            camera.setResolution(640, 480);
-            
-            CvSink cvSink = CameraServer.getInstance().getVideo();
-            CvSource outputStream = CameraServer.getInstance().putVideo("Line", 640, 480);
-            
-            Mat source = new Mat();
-            Mat output = new Mat();
-            
-            while(!Thread.interrupted()) {
-                cvSink.grabFrame(output);
-                int thickness = 2;
-                Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
-
-                Imgproc.line(output, new Point((output.size().width / 2), 0), new Point((output.size().width / 2), (output.size().height)), new Scalar(0, 0, 0), thickness);
-                outputStream.putFrame(output);
-            }
-        }).start();
+		
 		
 		/*** Update Dashboard ***/
 
@@ -105,6 +107,8 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 		/*** Reset all hardware ***/
 		driveController.reset();
+		motion.reset();
+		
 		//Reset auto timer
 		//Update robot preferences
 		input.updateInput();
@@ -117,6 +121,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
+		odometry.update();
 		Scheduler.getInstance().run();
 		//Log Gyro angle
 		//SmartDashboard.putNumber("gyro", robot.getAngle());
@@ -152,6 +157,7 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		//Updates Gyro angle
 		//SmartDashboard.putNumber("gyro", robot.getAngle());
+		visionController.update();
 		//Logs data to Dashboard
 		dashboardLogger.updateData();
 		//Read input from Gamepad
@@ -186,7 +192,9 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void disabledPeriodic() {
-	
+		dashboardLogger.putParamData();
+		visionController.update();
+
 		//Put Gyro Angle on SmartDashboard
 		//SmartDashboard.putNumber("gyro", robot.getAngle());
 		//Update input from Dashboard

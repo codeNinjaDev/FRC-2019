@@ -76,10 +76,10 @@ public class Params {
 
 
 	// [MOTION PROFILING] inches
-	public static final double maximum_velocity = 86; // TODO add maximum velocity in inches/s
-	public static final double maximum_acceleration = 0.12; // TODO add maximum velocity in inches/s/s
-	public static final double maximum_jerk = .23; // TODO add maximum velocity in a/s
-	public static double dt = .7;
+	public static final double maximum_velocity = 60; // TODO add maximum velocity in inches/s
+	public static final double maximum_acceleration = 60; // TODO add maximum velocity in inches/s/s
+	public static final double maximum_jerk = 230000; // TODO add maximum velocity in a/s
+	public static double dt = .2;
 
 	public static final double kp = 0.8; // 1.2;
 	public static final double kd = 0.0;

@@ -14,7 +14,10 @@ public class RightPIDOutput implements PIDOutput {
 	}
 	@Override
 	public void pidWrite(double output) {
-		driveSide.set(output);
+		if(driveSide.getInverted())
+			driveSide.set(output);
+		else
+			driveSide.set(-output);
 	}
 	
 	

@@ -1,40 +1,122 @@
 package frc.robot.controllers;
 
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
+import frc.robot.hardware.*;
 public class VisionController extends Subsystem {
-	private boolean is_enabled;
+	private boolean is_enabled, driverVision, tapeVision, cargoVision, cargoSeen, tapeSeen;
+	private NetworkTableEntry tapeDetected, cargoDetected, tapeYaw, cargoYaw, driveWanted, tapeWanted, cargoWanted, videoTimestamp;
+	private double targetAngle, timestamp, cargoAngle, tapeAngle;
 	private int left_contour, right_contour;
-	public VisionController() {
-		is_enabled = false;
+	private RemoteControl humanControl;
+	private Timer visionTimer;
+	NetworkTableInstance instance;
+	NetworkTable chickenVision;
+	public VisionController(RemoteControl humanControl, Timer visionTimer) {
+		this.humanControl = humanControl;
+		this.visionTimer = visionTimer;
+		instance = NetworkTableInstance.getDefault();
+		instance.addConnectionListener(event -> {
+			visionTimer.start();
+		}, true);
+		chickenVision = instance.getTable("ChickenVision");
+
+		tapeDetected = chickenVision.getEntry("tapeDetected");
+		cargoDetected = chickenVision.getEntry("cargoDetected");
+		tapeYaw = chickenVision.getEntry("tapeYaw");
+		cargoYaw = chickenVision.getEntry("cargoYaw");
+
+		driveWanted = chickenVision.getEntry("Driver");
+		tapeWanted = chickenVision.getEntry("Tape");
+		cargoWanted = chickenVision.getEntry("Cargo");
+
+		videoTimestamp = chickenVision.getEntry("VideoTimestamp");
+
+		is_enabled = tapeVision = cargoVision = false;
+		driverVision = true;
 	}
 
 	public void reset() {
 		
 	}
 	
-	public void update() {
-		SmartDashboard.putBoolean("VISION_isProcessing", is_enabled);
-		//left_contour = SmartDashboard.getNumber("VISION_leftContour", 0.0);
-		//right_contour = SmartDashboard.getNumber("VISION_rightContour", 0.0);
 	
-	}
-	//from 0-1
-	public double score(double AreaTargetScore, double AreaCurrentScore) {
-		double productCoefficient = (1/(1/AreaTargetScore))*100;
-		//from 0-100 Could be greater than 100 though that's why we need to convert
-		double rawScore = AreaCurrentScore*productCoefficient;
-		//from 0-1
-		double convertedScore;
-		if(rawScore <= 100) {
-			convertedScore = rawScore/100;
-			return convertedScore;
+	public void update() {
+
+		cargoSeen = cargoDetected.getBoolean(false);
+		tapeSeen = tapeDetected.getBoolean(false);
+
+		if(tapeSeen)
+			tapeAngle = tapeYaw.getDouble(0);
+		if(cargoSeen)
+			cargoAngle = cargoYaw.getDouble(0);
+
+
+		if(humanControl.getIntakeDesired()) {
+			driverVision = false;
+			tapeVision = false;
+			cargoVision = true;
+
+
+			driveWanted.setBoolean(driverVision);
+			tapeWanted.setBoolean(tapeVision);
+			cargoWanted.setBoolean(cargoVision);
+			SmartDashboard.putBoolean("Cargo detected", cargoDetected.getBoolean(false));
+
+			
+		} else if (humanControl.getOuttakeDesired()) {
+			driverVision = false;
+			tapeVision = true;
+			cargoVision = false;
+
+			driveWanted.setBoolean(driverVision);
+			tapeWanted.setBoolean(tapeVision);
+			cargoWanted.setBoolean(cargoVision);
+			
 		} else {
-			convertedScore = 100/rawScore;
-			return convertedScore;
+			driverVision = true;
+			tapeVision = false;
+			cargoVision = false;
+
+			driveWanted.setBoolean(driverVision);
+			tapeWanted.setBoolean(tapeVision);
+			cargoWanted.setBoolean(cargoVision);
 		}
+		
+		SmartDashboard.putNumber("Cargo Yaw", targetAngle);
+
 	}
+
+	public double targetYaw() {
+		if(cargoVision) {
+			return cargoYaw();
+		} else if(tapeVision) {
+			return tapeYaw();
+		} else {
+			return 0;
+		}
+
+	}
+	
+	public double cargoYaw() {
+		update();
+		if(cargoVision && cargoSeen)
+			return cargoAngle;
+		else
+			return 0;
+	}
+	public double tapeYaw() {
+		update();
+		if(tapeVision && tapeSeen)
+			return tapeAngle;
+		else
+			return 0;
+	}
+	
 	
 	public void enable() {
 		is_enabled = true;
@@ -48,13 +130,6 @@ public class VisionController extends Subsystem {
 		return is_enabled;
 	}
 	
-	public double getLeftContour() {
-		return left_contour;
-	}
-	
-	public double getRightContour() {
-		return right_contour;
-	}
 
 	@Override
 	protected void initDefaultCommand() {
@@ -62,5 +137,8 @@ public class VisionController extends Subsystem {
 		
 	}
 	
+	private void startTimer() {
+		visionTimer.start();
+	}
 	
 }
