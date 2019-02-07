@@ -41,8 +41,8 @@ public abstract class RemoteControl {
 	public abstract boolean getFeedArmDesired();
 	
 	/*** Intake block --Right Bumper***/
-	public abstract boolean getIntakeDesired();
+	public abstract boolean getCargoVisionDesired();
 	/*** Outtake block --Left Bumper***/
-	public abstract boolean getOuttakeDesired();
+	public abstract boolean getTapeVisionDesired();
 
 }

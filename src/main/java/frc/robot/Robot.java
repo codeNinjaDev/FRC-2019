@@ -45,6 +45,8 @@ public class Robot extends TimedRobot {
 	private AutoSelector auto;
 	private Timer visionTimer;
 	private Odometry odometry;
+
+	
 	public Robot() {
 		super();
 		visionTimer = new Timer();

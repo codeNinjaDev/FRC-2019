@@ -205,7 +205,7 @@ public class DriveController extends Subsystem {
 				gyro.reset();
 			}*/
 			SmartDashboard.putBoolean("GYRO?", gyro.isConnected());
-			if(humanControl.getIntakeDesired()) {
+			if(humanControl.getCargoVisionDesired()) {
 				visionPID.setPID(.05, 0.0001, 0.08);
 				visionPID.enable();
 				SmartDashboard.putNumber("GYRO VISION ANGLE", gyro.getAngle());
@@ -215,7 +215,7 @@ public class DriveController extends Subsystem {
 					arcadeDrive(driverLeftY,driverRightX, false);
 				}
 				
-			} else if(humanControl.getOuttakeDesired()) {
+			} else if(humanControl.getTapeVisionDesired()) {
 				visionPID.setPID(.05, 0.00016, 0.008);
 				visionPID.enable();
 				SmartDashboard.putNumber("GYRO VISION ANGLE", gyro.getAngle());

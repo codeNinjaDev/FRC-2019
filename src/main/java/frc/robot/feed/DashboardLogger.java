@@ -4,6 +4,7 @@ import frc.robot.Params;
 import frc.robot.controllers.DriveController;
 import frc.robot.controllers.MotionController;
 import frc.robot.hardware.RemoteControl;
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -12,6 +13,7 @@ public class DashboardLogger {
 	private RemoteControl humanControl;
 	private DriveController driveController;
 	private MotionController motion;
+	Compressor compressor;
 	public DashboardLogger(RemoteControl humanControl, DriveController driveController, MotionController motion) {
 		this.humanControl = humanControl;
 		this.driveController = driveController;
@@ -19,10 +21,10 @@ public class DashboardLogger {
 		if(DriverStation.getInstance().isFMSAttached()) {
 			putMatchInfo();
 		}
+		compressor = new Compressor();
 	}
 
 	public void updateData() {
-		
 		//SmartDashboard.putNumber("DEBUG_FPGATimestamp", robot.getTimestamp());
 		if(DriverStation.getInstance().isFMSAttached()) {
 			putMatchInfo();

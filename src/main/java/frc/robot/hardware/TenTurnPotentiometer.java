@@ -3,19 +3,27 @@ package frc.robot.hardware;
 import edu.wpi.first.hal.AnalogJNI;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.wpilibj.CounterBase;
+import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.SendableBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public class TenTurnPotentiometer {
+public class TenTurnPotentiometer extends SendableBase implements PIDSource {
 
 	  private static final int kAccumulatorSlot = 1;
 	  int m_port; // explicit no modifier, private and package accessible.
 	private int m_channel;
 	private static final int[] kAccumulatorChannels = { 0, 1 };
+	// 720 because max voltage is 5 Volts and max degrees is 3600 (10 turn potentiometer)
+	// 5(Volts) * k (Degrees/Volts) = 3600 Degrees
+	// k (Degrees / Volts) = 720 / 5
+
 	// Gear 4 to 1 ratio
-	private static final int VOLT_TO_DEGREES = 720 / 4;
+
+	private double VOLT_TO_DEGREES = 720;
 	double starting_error;
 	protected PIDSourceType m_pidSource = PIDSourceType.kDisplacement;
 
@@ -31,7 +39,11 @@ public class TenTurnPotentiometer {
 		    //temp
 		    starting_error = (getAverageVoltage() * VOLT_TO_DEGREES);
 		    HAL.report(tResourceType.kResourceType_AnalogChannel, channel);
-	   }
+		 }
+		 
+		 public void setGearRatio(double ratio) {
+			 VOLT_TO_DEGREES = 720 / ratio;
+		 }
 	   /**
 		   * Channel destructor.
 		   */
@@ -125,10 +137,10 @@ public class TenTurnPotentiometer {
 		  /**
 		   * Get the average voltage for use with PIDController.
 		   *
-		   * @return the average voltage
+		   * @return the angle
 		   */
 		  public double pidGet() {
-		    return getAverageVoltage();
+		    return getAngle();
 		  }
 
 		  public void initSendable(SendableBuilder builder) {
@@ -140,7 +152,17 @@ public class TenTurnPotentiometer {
 
 			if(RobotState.isDisabled())
 				starting_error = (getAverageVoltage() * VOLT_TO_DEGREES);
+			
 			double degrees = (getAverageVoltage() * VOLT_TO_DEGREES) - starting_error;
 			return degrees;
 		  }
+
+	
+
+	
+	public void reset() {
+		starting_error = (getAverageVoltage() * VOLT_TO_DEGREES);
+	}
+
+
 }

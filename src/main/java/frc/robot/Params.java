@@ -93,4 +93,21 @@ public class Params {
 	// Center of front left wheel to center of front right wheel
 	public static double track_base_width = 25;
 
+	// [ARM_PID]
+	public static double arm_p = 0;
+	public static double arm_i = 0;
+	public static double arm_d = 0;
+	public static double arm_f = 0;
+
+	public static double ARM_STOW_SETPOINT = 0; 
+	public static double ARM_INTAKE_CARGO_SETPOINT = 0; 
+	public static double ARM_LOW_CARGO_SETPOINT = 0; 
+	public static double ARM_MID_CARGO_SETPOINT = 0; 
+	public static double ARM_HIGH_CARGO_SETPOINT = 0; 
+	public static double ARM_LOAD_HATCH_SETPOINT = 0; 
+	public static double ARM_SCORE_HATCH_SETPOINT = 0; 
+	public static double ARM_FLOOR_HATCH_SETPOINT = 0; 
+
+	
+
 }

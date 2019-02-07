@@ -209,13 +209,13 @@ public class ControlBoard extends RemoteControl {
 
 
 	@Override
-	public boolean getIntakeDesired() {
+	public boolean getCargoVisionDesired() {
 
 		return intakeDesired;
 	}
 
 	@Override
-	public boolean getOuttakeDesired() {
+	public boolean getTapeVisionDesired() {
 
 		return outtakeDesired;
 	}

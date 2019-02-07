@@ -56,7 +56,7 @@ public class VisionController extends Subsystem {
 			cargoAngle = cargoYaw.getDouble(0);
 
 
-		if(humanControl.getIntakeDesired()) {
+		if(humanControl.getCargoVisionDesired()) {
 			driverVision = false;
 			tapeVision = false;
 			cargoVision = true;
@@ -68,7 +68,7 @@ public class VisionController extends Subsystem {
 			SmartDashboard.putBoolean("Cargo detected", cargoDetected.getBoolean(false));
 
 			
-		} else if (humanControl.getOuttakeDesired()) {
+		} else if (humanControl.getTapeVisionDesired()) {
 			driverVision = false;
 			tapeVision = true;
 			cargoVision = false;
