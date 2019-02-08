@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -82,9 +83,12 @@ public class Robot extends TimedRobot {
 			Mat output = new Mat();
 			
 			while(!Thread.interrupted()) {
-				cvSink.grabFrame(source);
-				Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
-				outputStream.putFrame(output);
+				long frameTime = cvSink.grabFrame(source);
+				if (frameTime == 0) {
+				continue;
+				}
+				//Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
+				outputStream.putFrame(source);
 			}
 		}).start();
 

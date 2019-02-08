@@ -11,13 +11,11 @@ import edu.wpi.first.wpilibj.Joystick;
 public class ControlBoard extends RemoteControl {
 	//Operator Buttons
 /** Operator Buttons **/
-	public ButtonReader armSwitchButton, armScaleButton, armFeedButton, intakeOperatorButton, outtakeOperatorButton, intakeDriverButton, outtakeDriverButton;
+	public ButtonReader intakeCargoButton, shootHighCargoButton, shootLowCargoButton, shootMidCargo, scoreHatchButton, autoAlignCargoButton, autoAlignTapeButton, loadHatchButton, floorHatchButton;
 	/*** Arm Override Trigger ***/
 	public ToggleButtonReader armManualButton;
 /** Driver Triggers **/
-	public TriggerReader slowDriveTier1Button, slowDriveTier2Button, outtakeWheelsButton, intakeWheelsButton;
-	/*** Booleans for relax wrist TODO for offseason streamline ***/
-	private boolean slowDriveTier1Desired, slowDriveTier2Desired, toggleArmManualDesired, armSwitchDesired, armScaleDesired, armFeedDesired, intakeDesired, outtakeDesired, armShifterDesired, outtakeWheelsDesired, intakeWheelsDesired;
+	public TriggerReader slowDriveTier1Button, slowDriveTier2Button, outtakePistonsButton;
 
 	/** Driver joystick axes **/
 	private double driverLeftJoyX, driverLeftJoyY, driverRightJoyX, driverRightJoyY;
@@ -35,22 +33,24 @@ public class ControlBoard extends RemoteControl {
 		if (Ports.USING_WIN_DRIVER_STATION) {
 			//Driver Controls
 			
-			intakeDriverButton = new ButtonReader(driverJoy, XInput.XINPUT_WIN_LEFT_BUMPER, "INTAKE_DRIVER");
-			outtakeDriverButton = new ButtonReader(driverJoy, XInput.XINPUT_WIN_RIGHT_BUMPER, "OUTTAKE_DRIVER");
+			autoAlignCargoButton = new ButtonReader(driverJoy, XInput.XINPUT_WIN_LEFT_BUMPER, "CARGO_ALIGN");
+			autoAlignTapeButton = new ButtonReader(driverJoy, XInput.XINPUT_WIN_RIGHT_BUMPER, "TAPE_ALIGN");
 			
 			slowDriveTier1Button = new TriggerReader(driverJoy, XInput.XINPUT_WIN_RIGHT_TRIGGER_AXIS, "BRAKE_1");
 			slowDriveTier2Button = new TriggerReader(driverJoy, XInput.XINPUT_WIN_LEFT_TRIGGER_AXIS, "BRAKE_2");
-			
+			intakeCargoButton = new ButtonReader(driverJoy, XInput.XINPUT_WIN_LEFT_STICK_CLICK, "INTAKE_CARGO");
+
 			//Operator Controls
-			armScaleButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_YELLOW_BUTTON, "SCALE");
-			armSwitchButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_GREEN_BUTTON, "SWITCH");
-			armFeedButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_BLUE_BUTTON, "FEED");
+			shootHighCargoButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_YELLOW_BUTTON, "HIGH_CARGO");
+			shootMidCargo = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_BLUE_BUTTON, "MID_CARGO");
+			shootLowCargoButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_GREEN_BUTTON, "LOW_CARGO");
 			armManualButton = new ToggleButtonReader(operatorJoy, XInput.XINPUT_WIN_BACK_BUTTON, "ARM_MANUAL");
 			
-			intakeWheelsButton = new TriggerReader(operatorJoy, XInput.XINPUT_WIN_LEFT_TRIGGER_AXIS, "IN_WHEELS");
-			outtakeWheelsButton = new TriggerReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_TRIGGER_AXIS, "OUT_WHEELS");
-			intakeOperatorButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_BUMPER, "INTAKE_OP");
-			outtakeOperatorButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_LEFT_BUMPER, "OUTTAKE_OP");
+			outtakePistonsButton = new TriggerReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_TRIGGER_AXIS, "PUSH PISTON");
+			scoreHatchButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_BUMPER, "SCORE_HATCH");
+			floorHatchButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_LEFT_BUMPER, "FLOOR_HATCH");
+			loadHatchButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_RED_BUTTON, "LOAD_HATCH");
+
 			
 			
 		}
@@ -60,21 +60,6 @@ public class ControlBoard extends RemoteControl {
 		driverRightJoyX = 0;
 		driverRightJoyY = 0;
 
-		// Driver variableS		
-		slowDriveTier1Desired = false;
-		slowDriveTier2Desired = false;
-		
-		
-		//Operator Vars
-		armSwitchDesired = false;
-		armScaleDesired = false;
-		armFeedDesired = false;
-		toggleArmManualDesired = false;
-		
-		intakeDesired = false;
-		outtakeDesired = false;
-		outtakeWheelsDesired = false;
-		intakeWheelsDesired = false;
 	}
 	/** Reads all controller inputs **/
 	public void readControls() {
@@ -91,23 +76,6 @@ public class ControlBoard extends RemoteControl {
 			operatorRightJoyY = -operatorJoy.getRawAxis(XInput.XINPUT_WIN_RIGHT_Y_AXIS);
 		}
 
-		// Driver Variables
-
-		slowDriveTier1Desired = slowDriveTier1Button.isDown();
-		slowDriveTier2Desired = slowDriveTier2Button.isDown();
-	
-		//Operator Vars
-		armSwitchDesired = armSwitchButton.isDown();
-		armScaleDesired = armScaleButton.isDown();
-		armFeedDesired = armFeedButton.isDown();
-		
-		toggleArmManualDesired = armManualButton.getState();
-		
-		intakeDesired = intakeDriverButton.isDown() || intakeOperatorButton.isDown();
-		outtakeDesired = outtakeDriverButton.isDown() || outtakeOperatorButton.isDown();
-		
-		outtakeWheelsDesired = outtakeWheelsButton.isDown();
-		intakeWheelsDesired = intakeWheelsButton.isDown();
 
 	}
 	/** Reads all controller buttons **/
@@ -118,18 +86,20 @@ public class ControlBoard extends RemoteControl {
 		
 		//Operator 
 		
-		armSwitchButton.readValue();
-		armScaleButton.readValue();
-		armFeedButton.readValue();
+		intakeCargoButton.readValue();
+		shootHighCargoButton.readValue();
+		shootLowCargoButton.readValue();
 		armManualButton.readValue();
 		
-		intakeDriverButton.readValue();
-		outtakeDriverButton.readValue();
-		intakeOperatorButton.readValue();
-		outtakeOperatorButton.readValue();
+		autoAlignCargoButton.readValue();
+		autoAlignTapeButton.readValue();
+		shootMidCargo.readValue();
+		scoreHatchButton.readValue();
 		
-		outtakeWheelsButton.readValue();
-		intakeWheelsButton.readValue();
+		outtakePistonsButton.readValue();
+
+		floorHatchButton.readValue();
+		loadHatchButton.readValue();
 
 	}
 
@@ -178,56 +148,68 @@ public class ControlBoard extends RemoteControl {
 	
 	@Override
 	public boolean getSlowDriveTier1Desired() {
-		return slowDriveTier1Desired;
+		return slowDriveTier1Button.isDown();
 	}
 	@Override
 	public boolean getSlowDriveTier2Desired() {
-		return slowDriveTier2Desired;
+		return slowDriveTier2Button.isDown();
 	}	
 	
 	@Override
 	public boolean toggleManualArmDesired() {
-		return toggleArmManualDesired;
+		return armManualButton.getState();
+	}
+
+	
+
+	@Override
+	public boolean intakeCargo() {
+		return intakeCargoButton.isDown();
 	}
 
 	@Override
-	public boolean getSwitchArmDesired() {
-
-		return armSwitchDesired;
+	public boolean shootHighCargo() {
+		return shootHighCargoButton.isDown();
 	}
 
 	@Override
-	public boolean getScaleArmDesired() {
-		return armScaleDesired;
+	public boolean shootLowCargo() {
+		return shootLowCargoButton.isDown();
 	}
 
 	@Override
-	public boolean getFeedArmDesired() {
-
-		return armFeedDesired;
+	public boolean shootMidCargo() {
+		return shootMidCargo.isDown();
 	}
 
+	@Override
+	public boolean floorHatch() {
+		return floorHatchButton.isDown();
+	}
+
+	@Override
+	public boolean scoreHatch() {
+		return scoreHatchButton.isDown();
+	}
+
+	@Override
+	public boolean loadHatch() {
+		return loadHatchButton.isDown();
+	}
+
+	@Override
+	public boolean outtakePistons() {
+		return outtakePistonsButton.isDown();
+	}
 
 	@Override
 	public boolean getCargoVisionDesired() {
-
-		return intakeDesired;
+		return autoAlignCargoButton.isDown();
 	}
 
 	@Override
 	public boolean getTapeVisionDesired() {
-
-		return outtakeDesired;
-	}
-	
-	
-	@Override
-	public boolean outtakeWheels() {
-		return outtakeWheelsDesired;
-	}
-	@Override
-	public boolean intakeWheels() {
-		return intakeWheelsDesired;
+		return autoAlignTapeButton.isDown();
 	}
 
 

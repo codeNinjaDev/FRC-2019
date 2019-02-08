@@ -29,20 +29,30 @@ public abstract class RemoteControl {
 	
 	/*** ARM Manual Override  --Back Button ***/
 	public abstract boolean toggleManualArmDesired();
-	/*** OUTTAKE WHEELS  --Back Button ***/
-	public abstract boolean outtakeWheels();
-	/*** INTAKE WHEELS  --Back Button ***/
-	public abstract boolean intakeWheels();
-	/*** Go to Switch Position (PID) --Green (A) Button ***/
-	public abstract boolean getSwitchArmDesired();
-	/*** Go to Scale Position (PID) --Yellow (Y) Button***/
-	public abstract boolean getScaleArmDesired();
-	/*** Go to Vault Position (PID) --Blue (X) Button***/
-	public abstract boolean getFeedArmDesired();
-	
-	/*** Intake block --Right Bumper***/
+
+	/*** Go to intake cargo (PID) --Left Driverjoy button ***/
+	public abstract boolean intakeCargo();
+	/*** Go to shoot high cargo (PID) -- Operator Yellow (Y) Button***/
+	public abstract boolean shootHighCargo();
+	/*** Go to shoot low (PID) --Operator Green (A) Button***/
+	public abstract boolean shootLowCargo();
+	/*** Go to shoot mid (PID) --Operator Blue (X) Button***/
+	public abstract boolean shootMidCargo();
+	/*** Go to floor hatch (PID) --Operator Left Bumper Button***/
+	public abstract boolean floorHatch();
+	/*** Go to score hatch (PID) --Operator Right Bumper Button***/
+	public abstract boolean scoreHatch();
+	/*** Go to score hatch (PID) --Operator Red (B) Button***/
+	public abstract boolean loadHatch();
+
+	/*** Go to score hatch (PID) --Operator Right trigger Button***/
+	public abstract boolean outtakePistons();
+
+	/*** Align with cargo Driver --Right Bumper***/
 	public abstract boolean getCargoVisionDesired();
-	/*** Outtake block --Left Bumper***/
+	/*** Align with tape Driver --Left Bumper***/
 	public abstract boolean getTapeVisionDesired();
+
+	
 
 }

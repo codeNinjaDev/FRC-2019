@@ -49,7 +49,7 @@ public class WristController extends Subsystem {
 	public enum ArmPosition {
 		stow, intakeCargo, shootLowCargo, shootMidCargo, shootHighCargo, floorHatch, loadHatch, scoreHatch
 	};
-
+	// IS going down positive or negative?
 	public WristController(RemoteControl humanControl) {
 		this.humanControl = humanControl;
 
@@ -118,28 +118,28 @@ public class WristController extends Subsystem {
 					armPID.disable();
 				}
 				// Move arm based off of the Right Y of Operator Joystick
-				armMotors.set((humanControl.getJoystickValue(Joysticks.kOperatorJoy, RemoteControl.Axes.kRY) * .75));
+				armMotors.set((humanControl.getJoystickValue(Joysticks.kOperatorJoy, RemoteControl.Axes.kRY) * .5));
 				// Intake normally
 				
-				if(humanControl.intakeCargo()) {
-					intakeMotors.set(-1);
-				} else if(humanControl.shootLowCargo()) {
+				if(humanControl.shootLowCargo()) {
 					intakeMotors.set(0.4);
 				} else if(humanControl.shootMidCargo()) {
 					intakeMotors.set(0.75);
 				} else if(humanControl.shootHighCargo()) {
 					intakeMotors.set(1);
+				} else if(humanControl.intakeCargo()) {
+					intakeMotors.set(-1);
 				}
 
-				if(humanControl.outtakeHatch()) {
+				if(humanControl.outtakePistons()) {
 					outtakePistons.set(Value.kForward);
 					outtakePistons.set(Value.kReverse);
 				}
 			} else {
 
 
-				
-				if(humanControl.outtakeHatch()) {
+				scoring();
+				if(humanControl.outtakePistons()) {
 					outtakePistons.set(Value.kForward);
 					outtakePistons.set(Value.kReverse);
 				}
@@ -156,13 +156,14 @@ public class WristController extends Subsystem {
 			intakeMotors.set(-1);
 			shooterPiston.set(Value.kReverse);
 		} else if(humanControl.shootLowCargo()) {
+			intakeMotors.set(0.4);
 			desiredArmPosition = ArmPosition.shootLowCargo;
 
 		} else if(humanControl.shootMidCargo()) {
-
+			intakeMotors.set(0.75);
 			desiredArmPosition = ArmPosition.shootMidCargo;
 		} else if(humanControl.shootHighCargo()) {
-
+			intakeMotors.set(1);
 			desiredArmPosition = ArmPosition.shootHighCargo;
 		} else if(humanControl.floorHatch()) {
 			shooterPiston.set(Value.kReverse);
@@ -203,7 +204,6 @@ public class WristController extends Subsystem {
 				armPID.enable();
 				if(armPID.onTarget()) {
 					shooterPiston.set(Value.kForward);
-					intakeMotors.set(0.4);
 				}
 				break;
 			case shootMidCargo:
@@ -213,7 +213,6 @@ public class WristController extends Subsystem {
 				armPID.enable();
 				if(armPID.onTarget()) {
 					shooterPiston.set(Value.kForward);
-					intakeMotors.set(0.75);
 				}
 				break;
 			case shootHighCargo:
@@ -223,7 +222,6 @@ public class WristController extends Subsystem {
 				armPID.enable();
 				if(armPID.onTarget()) {
 					shooterPiston.set(Value.kForward);
-					intakeMotors.set(1);
 				}
 				break;
 			case floorHatch:
