@@ -30,13 +30,11 @@ import com.kauailabs.navx.frc.AHRS;
  **/
 public class DriveController extends Subsystem {
 	/*** Drive Motors ***/
-	private VictorSP leftDriveMotorA, leftDriveMotorB, rightDriveMotorA, rightDriveMotorB;
-	/*** Motor Groups for Drive ***/
-	public SpeedControllerGroup leftDriveMotors, rightDriveMotors;
+	public Spark leftDriveMotors, rightDriveMotors;
 	/*** Drive Encoder ***/
 	public SuperEncoder leftDriveEncoder, rightDriveEncoder;
 
-	private SuperGyro gyro;
+	public SuperGyro gyro;
 	// Handles the math for arcade, curvature, and tank drive
 	private DifferentialDrive drive;
 	private RemoteControl humanControl;
@@ -64,7 +62,10 @@ public class DriveController extends Subsystem {
 
 	private VisionPIDSource visionSource;
 	private DriveRotateMotorsPIDOutput visionOutput;
-	private PIDController visionPID;
+	public PIDController visionPID;
+
+	public DriveRotateMotorsPIDOutput gyroPidOutput;
+	public PIDController gyroPID;
 
 	private VisionController vision;
 
@@ -95,13 +96,9 @@ public class DriveController extends Subsystem {
 		gyro = new SuperGyro(SPI.Port.kMXP);
 		gyro.hardReset();
 		// Init drive motors
-		leftDriveMotorA = new VictorSP(Ports.LEFT_DRIVE_MOTOR_A_PWM_PORT);
-		leftDriveMotorB = new VictorSP(Ports.LEFT_DRIVE_MOTOR_B_PWM_PORT);
-		rightDriveMotorA = new VictorSP(Ports.RIGHT_DRIVE_MOTOR_A_PWM_PORT);
-		rightDriveMotorB = new VictorSP(Ports.RIGHT_DRIVE_MOTOR_B_PWM_PORT);
-		// Make a Speed Controller group for Drive
-		leftDriveMotors = new SpeedControllerGroup(leftDriveMotorA, leftDriveMotorB);
-		rightDriveMotors = new SpeedControllerGroup(rightDriveMotorA, rightDriveMotorB);
+		leftDriveMotors = new Spark(Ports.LEFT_DRIVE_MOTORS_PWM_PORT);
+		rightDriveMotors = new Spark(Ports.RIGHT_DRIVE_MOTORS_PWM_PORT);
+		
 		
 		// Initialize drive encoders
 		leftDriveEncoder = new SuperEncoder(Ports.LEFT_DRIVE_ENCODER_PORTS[0], Ports.LEFT_DRIVE_ENCODER_PORTS[1]);
@@ -115,10 +112,9 @@ public class DriveController extends Subsystem {
 		rightDriveEncoder.setDistancePerPulse(((1.0) / Params.PULSES_PER_ROTATION) * (Params.WHEEL_CIRCUMFERENCE));
 		rightDriveEncoder.setSamplesToAverage(1);
 
-		leftDriveMotorA.setSafetyEnabled(false);
-		leftDriveMotorB.setSafetyEnabled(false);
-		rightDriveMotorA.setSafetyEnabled(false);
-		rightDriveMotorB.setSafetyEnabled(false);
+		leftDriveMotors.setSafetyEnabled(false);
+		rightDriveMotors.setSafetyEnabled(false);
+		
 
 		leftDriveEncoder.setPIDSourceType(PIDSourceType.kDisplacement);
 		leftDriveEncoder.setSamplesToAverage(Params.DRIVE_Y_PID_SAMPLES_AVERAGE);
@@ -159,7 +155,7 @@ public class DriveController extends Subsystem {
 		rightPID.disable();
 
 		visionSource = new VisionPIDSource(vision, gyro);
-		visionOutput = new DriveRotateMotorsPIDOutput(drive);
+		visionOutput = new DriveRotateMotorsPIDOutput(drive, false);
 		visionPID = new PIDController(.011, 0.00012, 0.008, visionSource, visionOutput);
 
 		visionPID.setOutputRange(-0.22, 0.22);
@@ -168,6 +164,12 @@ public class DriveController extends Subsystem {
 
 		visionPID.disable();
 
+		gyroPidOutput = new DriveRotateMotorsPIDOutput(drive, false);
+		gyroPID = new PIDController(Params.new_drive_p, Params.new_drive_i, Params.new_drive_d, gyro, gyroPidOutput);
+		gyroPID.setOutputRange(-0.8, 0.8);
+		gyroPID.setAbsoluteTolerance(3);
+		gyroPID.setSetpoint(0);
+		gyroPID.disable();
 
 
 		m_stateVal = DriveState.kInitialize;
@@ -206,7 +208,7 @@ public class DriveController extends Subsystem {
 			}*/
 			SmartDashboard.putBoolean("GYRO?", gyro.isConnected());
 			if(humanControl.getCargoVisionDesired()) {
-				visionPID.setPID(.05, 0.0001, 0.08);
+				visionPID.setPID(Params.vision_p, Params.vision_i, Params.vision_d);
 				visionPID.enable();
 				SmartDashboard.putNumber("GYRO VISION ANGLE", gyro.getAngle());
 				if(vision.targetYaw() != 0) {

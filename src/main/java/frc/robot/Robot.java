@@ -46,22 +46,25 @@ public class Robot extends TimedRobot {
 	private AutoSelector auto;
 	private Timer visionTimer;
 	private Odometry odometry;
+	private WristController wrist;
+	private boolean override;
+	DriverStationSim sim;
 
-	
 	public Robot() {
 		super();
 		visionTimer = new Timer();
-
+		sim = new DriverStationSim();
 		humanControl = new ControlBoard();
 		visionController = new VisionController(humanControl, visionTimer);
-
+		wrist = new WristController(humanControl);
 		driveController = new DriveController(humanControl, visionController);
 		lights = new LightController();
 		motion = new MotionController(driveController);
-		dashboardLogger = new DashboardLogger(humanControl, driveController, motion);
+		dashboardLogger = new DashboardLogger(humanControl, driveController, visionController);
 		input  = new DashboardInput();	
-		auto = new AutoSelector(driveController, motion, visionController, lights);
+		auto = new AutoSelector(driveController, motion, visionController, wrist, lights);
 		odometry = new Odometry(driveController, visionTimer);
+		override = false;
 
 	}
 
@@ -112,14 +115,24 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		/*** Reset all hardware ***/
-		driveController.reset();
 		motion.reset();
+		//Reset Drive
+		driveController.reset();
+		//Update input from Robot Preferences
+		input.updateInput();
+		wrist.reset();
 		
 		//Reset auto timer
 		//Update robot preferences
 		input.updateInput();
 		//Starts Autonomous Routine
-		auto.getSelectedAuto().start();
+		try {
+			auto.getSelectedAuto().start();
+
+		} catch(Exception e) {
+			System.out.println(e);
+			override = true;
+		}
 	}
 
 	/**
@@ -127,14 +140,7 @@ public class Robot extends TimedRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		odometry.update();
-		Scheduler.getInstance().run();
-		//Log Gyro angle
-		//SmartDashboard.putNumber("gyro", robot.getAngle());
-		//Start auto pattern on led strip
-		lights.setAutoLights();
-		//Log data to the Dashboard
-		dashboardLogger.updateData();
+		teleopPeriodic();
 
 	}
 
@@ -150,10 +156,7 @@ public class Robot extends TimedRobot {
 		//robot.resetGyro();
 		//Reset Encoders
 		driveController.resetEncoders();
-		//Reset Drive
-		driveController.reset();
-		//Update input from Robot Preferences
-		input.updateInput();
+		
 	}
 
 	/**
@@ -173,7 +176,7 @@ public class Robot extends TimedRobot {
 		//Set enabled Light pattern
 		lights.setEnabledLights();
 		//Log Data to Dashboard
-
+		wrist.update();
 	}
 
 	/**

@@ -19,6 +19,7 @@ public class XInput {
 	static final int XINPUT_WIN_START_BUTTON = 8;
 	static final int XINPUT_WIN_LEFT_STICK_CLICK = 9;
 	static final int XINPUT_WIN_RIGHT_STICK_CLICK = 10;
+	static final int XINPUT_WIN_X_BUTTON = 13;
 	// static final int XINPUT_WIN_LEFT_TRIGGER = 11;
 	// static final int XINPUT_WIN_RIGHT_TRIGGER = 12;
 

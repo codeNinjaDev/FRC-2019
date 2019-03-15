@@ -1,56 +1,160 @@
 package frc.robot.feed;
 
 import frc.robot.Params;
+
+import java.util.Map;
+
+import com.sun.javadoc.Parameter;
+
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /*** Allows input from Robot Preferences in SmartDashboard ***/
 public class DashboardInput {
 	/*** Preferences object to get input ***/
-	Preferences preferences;
+	private ShuffleboardTab parameterTab; 
+	private NetworkTableEntry maxSpeed;
+	private NetworkTableEntry driveP;
+	private NetworkTableEntry driveI;
+	private NetworkTableEntry driveD;
+	private NetworkTableEntry gyroP;
+	private NetworkTableEntry gyroI;
+	private NetworkTableEntry gyroD;
+	private NetworkTableEntry armP;
+	private NetworkTableEntry armI;
+	private NetworkTableEntry armD;
+	private NetworkTableEntry armStow;
+	private NetworkTableEntry armLowCargo;
+	private NetworkTableEntry armHighCargo;
+	private NetworkTableEntry armMidCargo;
+	private NetworkTableEntry armScoreHatch;
+	private NetworkTableEntry armLoadHatch;
+	private NetworkTableEntry armFloorHatch;
+	private NetworkTableEntry armMaxSpeed;
+
+	private NetworkTableEntry visionP;
+	private NetworkTableEntry visionI;
+	private NetworkTableEntry visionD;
+	private NetworkTableEntry cameraClimb;
+	private NetworkTableEntry cameraCargo;
+	private NetworkTableEntry cameraTape;
+
+
+
+	private NetworkTableEntry autoDelay;
+	private ShuffleboardLayout drivePID;
+	private ShuffleboardLayout armPID;
+	private ShuffleboardLayout visionPID;
+
 
 	// TODO Check if Dashboard Variables or Params works better
 	/*** Get Instance of preferences and Update input ***/
 	public DashboardInput() {
 		// Get overall Input from preferences
-		updateInput();
+		try {
+			parameterTab = Shuffleboard.getTab("Parameters");
+
+			drivePID = parameterTab.getLayout("Drive PID", BuiltInLayouts.kList).withSize(3, 3);
+			armPID = parameterTab.getLayout("Arm PID", BuiltInLayouts.kList).withSize(3, 3);
+			visionPID = parameterTab.getLayout("Vision PID", BuiltInLayouts.kList).withSize(3, 3);
+
+			maxSpeed = parameterTab.addPersistent("Max Speed", Params.MAX_SPEED).withWidget(BuiltInWidgets.kNumberSlider)
+			.withProperties(Map.of("min", 0, "max", 1)).getEntry();
+
+			driveP = parameterTab.addPersistent("Drive P", Params.drive_p).getEntry();
+			driveI = parameterTab.addPersistent("Drive I", Params.drive_i).getEntry();
+			driveD = parameterTab.addPersistent("Drive D", Params.drive_d).getEntry();
+
+			gyroP = parameterTab.addPersistent("gyro P", Params.new_drive_p).getEntry();
+			gyroI = parameterTab.addPersistent("gyro I", Params.new_drive_i).getEntry();
+			gyroD = parameterTab.addPersistent("gyro D", Params.new_drive_d).getEntry();
+
+			armP = parameterTab.addPersistent("Arm P", Params.arm_p).getEntry();
+			armI = parameterTab.addPersistent("Arm I", Params.arm_i).getEntry();
+			armD = parameterTab.addPersistent("Arm D", Params.arm_d).getEntry();
+
+			armStow = parameterTab.addPersistent("Arm Stow Angle", Params.ARM_STOW_SETPOINT).getEntry();
+			armLowCargo = parameterTab.addPersistent("Arm Low Cargo Angle", Params.ARM_LOW_CARGO_SETPOINT).getEntry();
+			armMidCargo = parameterTab.addPersistent("Arm Mid Cargo Angle", Params.ARM_MID_CARGO_SETPOINT).getEntry();
+			armHighCargo = parameterTab.addPersistent("Arm High Cargo Angle", Params.ARM_HIGH_CARGO_SETPOINT).getEntry();
+
+			armScoreHatch = parameterTab.addPersistent("Hatch Score Angle", Params.ARM_SCORE_HATCH_SETPOINT).getEntry();
+			armLoadHatch = parameterTab.addPersistent("Hatch Load Angle", Params.ARM_LOAD_HATCH_SETPOINT).getEntry();
+			armFloorHatch = parameterTab.addPersistent("Hatch Floor Angle", Params.ARM_FLOOR_HATCH_SETPOINT).getEntry();
+			armMaxSpeed = parameterTab.addPersistent("Arm Max Speed", Params.MAX_ARM_PID_OUT).withWidget(BuiltInWidgets.kNumberSlider)
+			.withProperties(Map.of("min", 0, "max", 1)).getEntry();
+
+			cameraClimb = parameterTab.addPersistent("CameraClimb Angle", Params.camera_climb).getEntry();
+			cameraTape = parameterTab.addPersistent("CameraTape Angle", Params.camera_tape).getEntry();
+			cameraCargo = parameterTab.addPersistent("CameraCargo Angle", Params.camera_cargo).getEntry();
+
+			visionP = parameterTab.addPersistent("Vision P", Params.vision_p).getEntry();
+			visionI = parameterTab.addPersistent("Vision I", Params.vision_i).getEntry();
+			visionD = parameterTab.addPersistent("Vision D", Params.vision_d).getEntry();
+
+			visionPID.add("Vision P", visionP);
+			visionPID.add("Vision I", visionI);
+			visionPID.add("Vision D", visionD);
+
+			drivePID.add("Drive P", driveP);
+			drivePID.add("Drive I", driveI);
+			drivePID.add("Drive D", driveD);
+
+			armPID.add("Arm P", armP);
+			armPID.add("Arm I", armI);
+			armPID.add("Arm D", armD);
+
+			updateInput();
+		} catch(Exception e) {
+
+		}
 	}
 
 	/*** Updates input from Dashboard ***/
 	public void updateInput() {
-		preferences = Preferences.getInstance();
-
-		Params.arm_p = preferences.getDouble("ARM P Value", 0);
-		Params.arm_i = preferences.getDouble("ARM I Value", 0);
-		Params.arm_d = preferences.getDouble("ARM D Value", 0);
-		Params.arm_f = preferences.getDouble("ARM F Value", 0);
-
-		Params.ARM_STOW_SETPOINT = preferences.getDouble("Stow angle", 0);
-		Params.ARM_LOW_CARGO_SETPOINT = preferences.getDouble("Low cargo angle", 60);
-		Params.ARM_MID_CARGO_SETPOINT = preferences.getDouble("Mid cargo angle", 40);
-		Params.ARM_HIGH_CARGO_SETPOINT = preferences.getDouble("High cargo angle", 20);
-		Params.ARM_LOAD_HATCH_SETPOINT = preferences.getDouble("Load hatch angle", 10);
-		Params.ARM_SCORE_HATCH_SETPOINT = preferences.getDouble("Score hatch angle", 10);
-		Params.ARM_FLOOR_HATCH_SETPOINT = preferences.getDouble("Floor hatch angle", 80);
-
-
-		Params.drive_p = preferences.getDouble("DRIVE_P_VALUE", 0.4);
-		Params.drive_i = preferences.getDouble("DRIVE_I_VALUE", 0);
-		Params.drive_d = preferences.getDouble("DRIVE_D_VALUE", 0.05);
-
 		
-		// Set Max Speed to preferences Max Speed
-		DashboardVariables.max_speed = preferences.getDouble("MAX_SPEED", 1);
+		try {
+			Params.arm_p = armP.getDouble(Params.arm_p);
+			Params.arm_i = armI.getDouble(Params.arm_i);
+			Params.arm_d = armD.getDouble(Params.arm_d);
 
-		DashboardVariables.firstAutoTime = preferences.getDouble("AUTO_TIME", 0);
+			Params.vision_p = visionP.getDouble(Params.vision_p);
+			Params.vision_i = visionI.getDouble(Params.vision_i);
+			Params.vision_d = visionD.getDouble(Params.vision_d);
 
-		Params.TIME_DELAY = preferences.getDouble("AUTO_DELAY", 0);
-		Params.MAX_SPEED = preferences.getDouble("MAX_SPEED", 1);
+			Params.camera_climb = cameraClimb.getDouble(Params.camera_climb);
+			Params.camera_tape = cameraTape.getDouble(Params.camera_tape);
+			Params.camera_cargo = cameraCargo.getDouble(Params.camera_cargo);
 
-		Params.track_base_width = preferences.getDouble("TRACK_BASE_WIDTH", 12);
-		Params.wheel_base_width = preferences.getDouble("WHEEL_BASE_WIDTH", 12);
-		Params.dt = preferences.getDouble("DELTA_TIME_MP", .2);
 
+			Params.ARM_STOW_SETPOINT = armStow.getDouble(Params.ARM_STOW_SETPOINT);
+			Params.ARM_LOW_CARGO_SETPOINT = armLowCargo.getDouble(Params.ARM_LOW_CARGO_SETPOINT);
+			Params.ARM_MID_CARGO_SETPOINT = armMidCargo.getDouble(Params.ARM_MID_CARGO_SETPOINT);
+			Params.ARM_HIGH_CARGO_SETPOINT = armHighCargo.getDouble(Params.ARM_HIGH_CARGO_SETPOINT);
+			Params.ARM_LOAD_HATCH_SETPOINT = armLoadHatch.getDouble(Params.ARM_LOAD_HATCH_SETPOINT);
+			Params.ARM_SCORE_HATCH_SETPOINT = armScoreHatch.getDouble(Params.ARM_SCORE_HATCH_SETPOINT);
+			Params.ARM_FLOOR_HATCH_SETPOINT = armFloorHatch.getDouble(Params.ARM_FLOOR_HATCH_SETPOINT);
+
+			Params.MAX_ARM_PID_OUT = armMaxSpeed.getDouble(Params.MAX_ARM_PID_OUT);
+			Params.drive_p = driveP.getDouble(Params.drive_p);
+			Params.drive_i = driveI.getDouble(Params.drive_i);
+			Params.drive_d = driveD.getDouble(Params.drive_d);
+			
+			Params.new_drive_p = gyroP.getDouble(Params.new_drive_p);
+			Params.new_drive_i = gyroI.getDouble(Params.new_drive_i);
+			Params.new_drive_d = gyroD.getDouble(Params.new_drive_d);
+			Params.TIME_DELAY = autoDelay.getDouble(Params.TIME_DELAY);
+			Params.MAX_SPEED = maxSpeed.getDouble(Params.MAX_SPEED);
+	
+		} catch (Exception e) {
+			
+		}
 	}
 
 	

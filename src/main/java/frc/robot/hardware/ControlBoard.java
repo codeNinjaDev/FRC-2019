@@ -13,7 +13,7 @@ public class ControlBoard extends RemoteControl {
 /** Operator Buttons **/
 	public ButtonReader intakeCargoButton, shootHighCargoButton, shootLowCargoButton, shootMidCargo, scoreHatchButton, autoAlignCargoButton, autoAlignTapeButton, loadHatchButton, floorHatchButton;
 	/*** Arm Override Trigger ***/
-	public ToggleButtonReader armManualButton;
+	public ToggleButtonReader climbButton, armManualButton;
 /** Driver Triggers **/
 	public TriggerReader slowDriveTier1Button, slowDriveTier2Button, outtakePistonsButton;
 
@@ -38,8 +38,8 @@ public class ControlBoard extends RemoteControl {
 			
 			slowDriveTier1Button = new TriggerReader(driverJoy, XInput.XINPUT_WIN_RIGHT_TRIGGER_AXIS, "BRAKE_1");
 			slowDriveTier2Button = new TriggerReader(driverJoy, XInput.XINPUT_WIN_LEFT_TRIGGER_AXIS, "BRAKE_2");
-			intakeCargoButton = new ButtonReader(driverJoy, XInput.XINPUT_WIN_LEFT_STICK_CLICK, "INTAKE_CARGO");
-
+			intakeCargoButton = new ButtonReader(driverJoy, XInput.XINPUT_WIN_GREEN_BUTTON, "INTAKE_CARGO");
+			climbButton = new ToggleButtonReader(driverJoy, XInput.XINPUT_WIN_X_BUTTON, "CLIMB");
 			//Operator Controls
 			shootHighCargoButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_YELLOW_BUTTON, "HIGH_CARGO");
 			shootMidCargo = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_BLUE_BUTTON, "MID_CARGO");
@@ -83,10 +83,11 @@ public class ControlBoard extends RemoteControl {
 		//Driver
 		slowDriveTier1Button.readValue();
 		slowDriveTier2Button.readValue();
-		
+		climbButton.readValue();
+		intakeCargoButton.readValue();
+
 		//Operator 
 		
-		intakeCargoButton.readValue();
 		shootHighCargoButton.readValue();
 		shootLowCargoButton.readValue();
 		armManualButton.readValue();
@@ -210,6 +211,11 @@ public class ControlBoard extends RemoteControl {
 	@Override
 	public boolean getTapeVisionDesired() {
 		return autoAlignTapeButton.isDown();
+	}
+
+	@Override
+	public boolean climbDesired() {
+		return climbButton.isDown();
 	}
 
 

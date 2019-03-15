@@ -139,6 +139,7 @@ public class TenTurnPotentiometer extends SendableBase implements PIDSource {
 		   *
 		   * @return the angle
 		   */
+			@Override
 		  public double pidGet() {
 		    return getAngle();
 		  }
@@ -150,11 +151,11 @@ public class TenTurnPotentiometer extends SendableBase implements PIDSource {
 		  public double getAngle() {
 			  SmartDashboard.putNumber("AVERAGE_POT_VolTAGE", getAverageVoltage());
 
-			if(RobotState.isDisabled())
-				starting_error = (getAverageVoltage() * VOLT_TO_DEGREES);
+				if(RobotState.isDisabled())
+					starting_error = (getAverageVoltage() * VOLT_TO_DEGREES);
 			
-			double degrees = (getAverageVoltage() * VOLT_TO_DEGREES) - starting_error;
-			return degrees;
+				double degrees = (getAverageVoltage() * VOLT_TO_DEGREES) - starting_error;
+				return degrees;
 		  }
 
 	

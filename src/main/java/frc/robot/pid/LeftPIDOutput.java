@@ -1,21 +1,20 @@
 package frc.robot.pid;
 
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.PIDOutput;
+import edu.wpi.first.wpilibj.Spark;
 
 /*** PID Output for Driving left side ***/
 public class LeftPIDOutput implements PIDOutput {
-	private SpeedControllerGroup driveSide;
+	private Spark driveSide;
 	/*** Averages encoder values and returns them to PID Controller ***/
-	public LeftPIDOutput(SpeedControllerGroup leftDriveside) {
+	public LeftPIDOutput(Spark leftDriveside) {
 		this.driveSide = leftDriveside;
 	}
 	@Override
 	public void pidWrite(double output) {
-		SmartDashboard.putNumber("PID Output", output);
 		driveSide.set(output);
 	}
 	

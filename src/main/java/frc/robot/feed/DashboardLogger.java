@@ -3,22 +3,75 @@ package frc.robot.feed;
 import frc.robot.Params;
 import frc.robot.controllers.DriveController;
 import frc.robot.controllers.MotionController;
+import frc.robot.controllers.VisionController;
 import frc.robot.hardware.RemoteControl;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+
 
 public class DashboardLogger {
 	private RemoteControl humanControl;
 	private DriveController driveController;
-	private MotionController motion;
+	private VisionController visionController;
+	private ShuffleboardTab controllerTab; 
+	private ShuffleboardTab electricalTab; 
+	private ShuffleboardTab sensorTab; 
+	private ShuffleboardTab matchTab; 
+	private ShuffleboardTab visionTab; 
+	private NetworkTableEntry batteryVoltage;
+	private NetworkTableEntry brownOut;
+	private NetworkTableEntry current3v3;
+	private NetworkTableEntry current5v;
+	private NetworkTableEntry current6v;
+	private NetworkTableEntry inputCurrent;
+	private NetworkTableEntry voltage3v3;
+	private NetworkTableEntry voltage5v;
+	private NetworkTableEntry voltage6v;
+	private NetworkTableEntry inputVoltage;
+	private NetworkTableEntry eventName;
+	private NetworkTableEntry matchName;
+	private NetworkTableEntry matchType;
+	private NetworkTableEntry alliance;
+	private NetworkTableEntry location;
+	private NetworkTableEntry driverJoyLY;
+	private NetworkTableEntry driverJoyLX;
+	private NetworkTableEntry driverJoyY;
+	private NetworkTableEntry matchTime;
+	private NetworkTableEntry wristSensor;
+	private NetworkTableEntry gyro;
+
+
+
+
+
+
+
+
+
+
+
+
 	Compressor compressor;
-	public DashboardLogger(RemoteControl humanControl, DriveController driveController, MotionController motion) {
+
+
+	public DashboardLogger(RemoteControl humanControl, DriveController driveController, VisionController vision) {
 		this.humanControl = humanControl;
 		this.driveController = driveController;
-		this.motion = motion;
+		this.visionController = vision;
+		controllerTab = Shuffleboard.getTab("Controllers");
+		electricalTab = Shuffleboard.getTab("Electrical");
+		sensorTab = Shuffleboard.getTab("Sensors");
+		matchTab = Shuffleboard.getTab("Match Info");
+		visionTab = Shuffleboard.getTab("Vision Info");
+
 		if(DriverStation.getInstance().isFMSAttached()) {
+			Shuffleboard.startRecording();
 			putMatchInfo();
 		}
 		compressor = new Compressor();
@@ -33,13 +86,7 @@ public class DashboardLogger {
 		putJoystickAxesData();
 		putMotorOutputs();
 		putSensors();
-		if(DriverStation.getInstance().isAutonomous()) {
-			SmartDashboard.putString("DS_MODE", "AUTONOMOUS");
-		}  else if(DriverStation.getInstance().isOperatorControl()) {
-			SmartDashboard.putString("DS_MODE", "TELEOP");
-		} else {
-			SmartDashboard.putString("DS_MODE", "DISABLED");
-		}
+
 		
 		
 	}
@@ -65,7 +112,6 @@ public class DashboardLogger {
 		SmartDashboard.putString("MATCH_TYPE", DriverStation.getInstance().getMatchType().toString());
 		SmartDashboard.putString("ALLIANCE", DriverStation.getInstance().getAlliance().toString());
 		SmartDashboard.putNumber("LOCATION", DriverStation.getInstance().getLocation());
-		SmartDashboard.putString("GAME_DATA", DriverStation.getInstance().getGameSpecificMessage());
 		SmartDashboard.putNumber("MATCH_TIME", DriverStation.getInstance().getMatchTime());
 
 	}
@@ -97,7 +143,7 @@ public class DashboardLogger {
 		SmartDashboard.putBoolean("MOTORS_rightDrive_REVERSED", driveController.leftDriveMotors.getInverted());
 		
 		SmartDashboard.putNumber("LEFT_DRIVE_MOTORS", driveController.leftDriveMotors.get());
-		SmartDashboard.putNumber("RIGHT_DRIVE_MOTORS", driveController.rightDriveMotors.get());
+		
 
 	}
 
@@ -121,7 +167,6 @@ public class DashboardLogger {
 		SmartDashboard.putNumber("X_SPEED_MULTIPLIER", Params.GLOBAL_X_DRIVE_SPEED_MULTIPLIER);
 		SmartDashboard.putNumber("Y_SPEED_MULTIPLIER", Params.GLOBAL_Y_DRIVE_SPEED_MULTIPLIER);
 	
-		SmartDashboard.putBoolean("Profile Finished", motion.isProfileFinished());
 	}
 	
 	

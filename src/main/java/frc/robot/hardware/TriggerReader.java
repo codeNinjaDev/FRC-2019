@@ -1,6 +1,9 @@
 package frc.robot.hardware;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 /*** Reads Trigger Input *****/
 public class TriggerReader {
@@ -9,26 +12,40 @@ public class TriggerReader {
 	private boolean lastState;
 	private boolean currState;
 	private String triggerName;
+	private ShuffleboardTab controllerTab; 
+	private NetworkTableEntry triggerStatus;
+	private NetworkTableEntry triggerValue;
+	private double triggerNumber;
 	public TriggerReader(Joystick joystick, int triggerAxis, String triggerName) {
+		controllerTab = Shuffleboard.getTab("Controllers");
+
 		this.joystick = joystick;
 		this.triggerAxis = triggerAxis;
 		this.triggerName = triggerName + "_TRIGGER";
-		if(joystick.getRawAxis(triggerAxis) > 0.8) {
+		triggerNumber = joystick.getRawAxis(triggerAxis);
+		if(triggerNumber > 0.8) {
 			currState = true;
 		} else {
 			currState = false;
 		}
 		lastState = currState;
+		triggerStatus = controllerTab.add(triggerName, currState).getEntry();
+		triggerValue = controllerTab.add(triggerName + "_AXIS", triggerNumber).getEntry();
+
+
 	}
 	
 	public void readValue() {
 		lastState = currState;
-		SmartDashboard.putNumber(triggerName + "_AXIS", joystick.getRawAxis(triggerAxis));
-		if(joystick.getRawAxis(triggerAxis) > 0.8) {
+		triggerNumber = joystick.getRawAxis(triggerAxis);
+		triggerValue.setDouble(triggerNumber);
+		if(triggerNumber > 0.8) {
 			currState = true;
 		} else {
 			currState = false;
 		}
+		triggerStatus.setBoolean(currState);
+
 	}
 	
 	public boolean wasJustPressed() {
@@ -44,7 +61,6 @@ public class TriggerReader {
 	}
 	
 	public boolean isDown() {
-		SmartDashboard.putBoolean(triggerName, currState);
 		return currState;
 	}
 

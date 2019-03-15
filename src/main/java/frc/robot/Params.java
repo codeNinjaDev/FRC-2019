@@ -68,6 +68,17 @@ public class Params {
 	public static double turn_drive_i = 0.0;
 	public static double turn_drive_d = 0.1;
 
+
+	// [TURN DRIVE_PID]
+	public static double vision_p = .05;
+	public static double vision_i = 0.0001;
+	public static double vision_d = 0.08;
+
+	// [CAMERA ANGLES]
+	public static double camera_climb = 0;
+	public static double camera_tape = 90;
+	public static double camera_cargo = 105;
+
 	// [NEW_DRIVE_PID]
 	public static double new_drive_p = DashboardVariables.DRIVE_P;
 	public static double new_drive_i = DashboardVariables.DRIVE_I;
@@ -108,6 +119,6 @@ public class Params {
 	public static double ARM_SCORE_HATCH_SETPOINT = 0; 
 	public static double ARM_FLOOR_HATCH_SETPOINT = 0; 
 
-	
+	public static double MAX_ARM_PID_OUT = 1;
 
 }

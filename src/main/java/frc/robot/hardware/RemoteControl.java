@@ -30,7 +30,7 @@ public abstract class RemoteControl {
 	/*** ARM Manual Override  --Back Button ***/
 	public abstract boolean toggleManualArmDesired();
 
-	/*** Go to intake cargo (PID) --Left Driverjoy button ***/
+	/*** Go to intake cargo (PID) --Driver Green button ***/
 	public abstract boolean intakeCargo();
 	/*** Go to shoot high cargo (PID) -- Operator Yellow (Y) Button***/
 	public abstract boolean shootHighCargo();
@@ -52,6 +52,8 @@ public abstract class RemoteControl {
 	public abstract boolean getCargoVisionDesired();
 	/*** Align with tape Driver --Left Bumper***/
 	public abstract boolean getTapeVisionDesired();
+	/*** XBox controller button - Allow Climb */
+	public abstract boolean climbDesired();
 
 	
 

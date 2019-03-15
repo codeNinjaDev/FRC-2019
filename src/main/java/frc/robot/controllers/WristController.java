@@ -6,29 +6,33 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.pid.*;
 import frc.robot.Params;
+import frc.robot.auto.actions.OuttakePistons;
 import frc.robot.hardware.*;
 import frc.robot.hardware.RemoteControl.Joysticks;
 
 /*** Controls mechanism for both cargo and hatch */
 public class WristController extends Subsystem {
-	private Spark leftIntakeMotor, rightIntakeMotor;
+	private VictorSP leftIntakeMotor, rightIntakeMotor;
 	private SpeedControllerGroup intakeMotors;
 
 	private RemoteControl humanControl;
 
-	private Spark armAMotor, armBMotor;
+	private VictorSP armMotorA, armMotorB;
 	private SpeedControllerGroup armMotors;
 
-	private DoubleSolenoid outtakePistons, shooterPiston;
-	private TenTurnPotentiometer wristPotentiometer;
+	private Solenoid shooterPiston;
+	public Solenoid outtakePiston;
+	public TenTurnPotentiometer wristPotentiometer;
 
 	private PIDOutput armPIDOutput;
 	private PIDController armPID;
@@ -47,31 +51,30 @@ public class WristController extends Subsystem {
 	};
 
 	public enum ArmPosition {
-		stow, intakeCargo, shootLowCargo, shootMidCargo, shootHighCargo, floorHatch, loadHatch, scoreHatch
+		stow, intakeCargo, shootLowCargo, shootMidCargo, shootHighCargo
 	};
 	// IS going down positive or negative?
 	public WristController(RemoteControl humanControl) {
 		this.humanControl = humanControl;
 
 		wristPotentiometer = new TenTurnPotentiometer(Ports.WRIST_POT);
-		wristPotentiometer.setGearRatio(4);
-
-		leftIntakeMotor = new Spark(Ports.LEFT_INTAKE_WHEEL_PORT);
-		rightIntakeMotor = new Spark(Ports.RIGHT_INTAKE_WHEEL_PORT);
+		wristPotentiometer.setGearRatio(210);
+		leftIntakeMotor = new VictorSP(Ports.LEFT_INTAKE_WHEEL_PORT);
+		rightIntakeMotor = new VictorSP(Ports.RIGHT_INTAKE_WHEEL_PORT);
 		rightIntakeMotor.setInverted(true);
 
 		intakeMotors = new SpeedControllerGroup(leftIntakeMotor, rightIntakeMotor);
 		intakeMotors.setInverted(false);
 
-		armAMotor = new Spark(Ports.WRIST_ARM_A_PORT);
-		armBMotor = new Spark(Ports.WRIST_ARM_B_PORT);
+		armMotorA = new VictorSP(Ports.WRIST_ARM_A_PORT);
+		armMotorB = new VictorSP(Ports.WRIST_ARM_B_PORT);
 
-		armMotors = new SpeedControllerGroup(armAMotor, armBMotor);
 
-		armMotors.setInverted(false);
+		armMotorA.setInverted(true);
+		armMotors = new SpeedControllerGroup(armMotorA, armMotorB);
+		outtakePiston = new Solenoid(Ports.OUTTAKE_SOLENOIDS[0]);
 
-		outtakePistons = new DoubleSolenoid(Ports.OUTTAKE_SOLENOIDS[0], Ports.OUTTAKE_SOLENOIDS[1]);
-		shooterPiston = new DoubleSolenoid(Ports.SHOOTER_SOLENOIDS[0], Ports.SHOOTER_SOLENOIDS[1]);
+		shooterPiston = new Solenoid(Ports.SHOOTER_SOLENOIDS[0]);
 
 		armPIDOutput = new WristPIDOutput(armMotors);
 		armPID = new PIDController(0, 0, 0, wristPotentiometer, armPIDOutput);
@@ -80,6 +83,10 @@ public class WristController extends Subsystem {
 
 		desiredArmPosition = ArmPosition.stow;
 
+	}
+
+	public void showAngle() {
+		SmartDashboard.putNumber("TEN_TURN_POT", wristPotentiometer.getAngle());
 	}
 
 	public void stop() {
@@ -92,10 +99,13 @@ public class WristController extends Subsystem {
 	}
 
 	public void update() {
+		System.out.println("running");
+
 		// Switches based off of current state
 		switch (m_stateVal) {
 		// If initializing
 		case kInitialize:
+			System.out.println("init");
 
 			// Intitalize Variables and PId
 			armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
@@ -104,8 +114,11 @@ public class WristController extends Subsystem {
 
 			// Sets next state to teleop
 			nextState = ArmState.kTeleop;
+			m_stateVal = ArmState.kTeleop;
 			break;
 		case kTeleop:
+			System.out.println("teleoping");
+
 			// *** TOGGLE ZONE ***//
 
 			// If armManualDesired, Toggle the arm override
@@ -118,134 +131,119 @@ public class WristController extends Subsystem {
 					armPID.disable();
 				}
 				// Move arm based off of the Right Y of Operator Joystick
-				armMotors.set((humanControl.getJoystickValue(Joysticks.kOperatorJoy, RemoteControl.Axes.kRY) * .5));
+				armMotors.set((humanControl.getJoystickValue(Joysticks.kOperatorJoy, RemoteControl.Axes.kLY)));
 				// Intake normally
 				
 				if(humanControl.shootLowCargo()) {
-					intakeMotors.set(0.4);
-				} else if(humanControl.shootMidCargo()) {
+					shooterPiston.set(true);
 					intakeMotors.set(0.75);
+				} else if(humanControl.shootMidCargo()) {
+					shooterPiston.set(true);
+					intakeMotors.set(0.9);
 				} else if(humanControl.shootHighCargo()) {
+					shooterPiston.set(true);
 					intakeMotors.set(1);
 				} else if(humanControl.intakeCargo()) {
+					shooterPiston.set(false);
 					intakeMotors.set(-1);
+				} else {
+					shooterPiston.set(false);
 				}
 
 				if(humanControl.outtakePistons()) {
-					outtakePistons.set(Value.kForward);
-					outtakePistons.set(Value.kReverse);
+					System.out.println("OUTAKING");
+										SmartDashboard.putString("Outtaking", "OUtaking");
+
+					outtakePistons();
+
+					
+				} else {
+					outtakePiston.set(false);
 				}
 			} else {
 
-
-				scoring();
+				try {
+					scoring();
+				} catch(Exception e) {
+					System.out.println(e);
+				}
 				if(humanControl.outtakePistons()) {
-					outtakePistons.set(Value.kForward);
-					outtakePistons.set(Value.kReverse);
+					System.out.println("OUTAKING");
+					SmartDashboard.putString("Outtaking", "OUtaking");
+					outtakePistons();
+					
+				} else {
+					outtakePiston.set(false);
 				}
 			}
 
-			
-
 		}
 	}
-
+	public void outtakePistons() {
+		outtakePiston.set(true);
+	}
 	public void scoring() {
+
 		if(humanControl.intakeCargo()) {
 			desiredArmPosition = ArmPosition.intakeCargo;
 			intakeMotors.set(-1);
-			shooterPiston.set(Value.kReverse);
+			shooterPiston.set(false);
 		} else if(humanControl.shootLowCargo()) {
-			intakeMotors.set(0.4);
+			intakeMotors.set(0.75);
 			desiredArmPosition = ArmPosition.shootLowCargo;
 
 		} else if(humanControl.shootMidCargo()) {
-			intakeMotors.set(0.75);
+			intakeMotors.set(0.9);
 			desiredArmPosition = ArmPosition.shootMidCargo;
 		} else if(humanControl.shootHighCargo()) {
 			intakeMotors.set(1);
 			desiredArmPosition = ArmPosition.shootHighCargo;
-		} else if(humanControl.floorHatch()) {
-			shooterPiston.set(Value.kReverse);
-			desiredArmPosition = ArmPosition.floorHatch;
-		} else if(humanControl.loadHatch()) {
-			shooterPiston.set(Value.kReverse);
-			desiredArmPosition = ArmPosition.loadHatch;
-		} else if(humanControl.scoreHatch()) {
-			shooterPiston.set(Value.kReverse);
-			desiredArmPosition = ArmPosition.scoreHatch;
 		} else {
-			shooterPiston.set(Value.kReverse);
+			shooterPiston.set(false);
 			desiredArmPosition = ArmPosition.stow;
 			intakeMotors.set(0);
-
 		}
 
 		switch (desiredArmPosition) {
 			case stow:
-				armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
-				armPID.setOutputRange(-1, 1);
-				armPID.setSetpoint(Params.ARM_STOW_SETPOINT);
-				armPID.enable();
-
+				startArmPID(Params.ARM_STOW_SETPOINT);
 				break;
 			case intakeCargo:
-				armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
-				armPID.setOutputRange(-1, 1);
-				armPID.setSetpoint(Params.ARM_INTAKE_CARGO_SETPOINT);
-				armPID.enable();
-
-
+				startArmPID(Params.ARM_INTAKE_CARGO_SETPOINT);
 				break;
 			case shootLowCargo:
-				armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
-				armPID.setOutputRange(-1, 1);
-				armPID.setSetpoint(Params.ARM_LOW_CARGO_SETPOINT);
-				armPID.enable();
+				startArmPID(Params.ARM_LOW_CARGO_SETPOINT);
 				if(armPID.onTarget()) {
-					shooterPiston.set(Value.kForward);
+					shooterPiston.set(true);
 				}
 				break;
 			case shootMidCargo:
-				armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
-				armPID.setOutputRange(-1, 1);
-				armPID.setSetpoint(Params.ARM_MID_CARGO_SETPOINT);
-				armPID.enable();
+				startArmPID(Params.ARM_MID_CARGO_SETPOINT);
 				if(armPID.onTarget()) {
-					shooterPiston.set(Value.kForward);
+					shooterPiston.set(true);
 				}
 				break;
 			case shootHighCargo:
-				armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
-				armPID.setOutputRange(-1, 1);
-				armPID.setSetpoint(Params.ARM_HIGH_CARGO_SETPOINT);
-				armPID.enable();
+				startArmPID(Params.ARM_HIGH_CARGO_SETPOINT);
 				if(armPID.onTarget()) {
-					shooterPiston.set(Value.kForward);
+					shooterPiston.set(true);
 				}
 				break;
-			case floorHatch:
-				armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
-				armPID.setOutputRange(-1, 1);
-				armPID.setSetpoint(Params.ARM_FLOOR_HATCH_SETPOINT);
-				armPID.enable();
+			default: 
+				desiredArmPosition = ArmPosition.stow;
 				break;
-			case scoreHatch:
-				armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
-				armPID.setOutputRange(-1, 1);
-				armPID.setSetpoint(Params.ARM_SCORE_HATCH_SETPOINT);
-				armPID.enable();
-				break;
-			case loadHatch:
-				armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
-				armPID.setOutputRange(-1, 1);
-				armPID.setSetpoint(Params.ARM_LOAD_HATCH_SETPOINT);
-				armPID.enable();
-				break;
+
 		}
 
 
 
+	}
+
+	public void startArmPID(double setpoint) {
+		armPID.setPID(Params.arm_p, Params.arm_i, Params.arm_d, Params.arm_f);
+		armPID.setOutputRange(-Params.MAX_ARM_PID_OUT, Params.MAX_ARM_PID_OUT);
+		armPID.setSetpoint(setpoint);
+		armPID.enable();
 	}
 
 	@Override

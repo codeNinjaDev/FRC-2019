@@ -1,6 +1,9 @@
 package frc.robot.hardware;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 /** Debounces and reads controller values 
  * @category hardware
@@ -14,7 +17,8 @@ public class ButtonReader {
 	private boolean lastState;
 	/** Current state of the button **/
 	private boolean currState;
-
+	private ShuffleboardTab controllerTab; 
+	private NetworkTableEntry buttonStatus;
 	/*** Description of Button ***/
 	private String buttonName;
 	/** Initializes controller variables 
@@ -22,11 +26,13 @@ public class ButtonReader {
 	 * @param buttonNum The controller button number
 	 * @param buttonName Describes function of the button **/
 	public ButtonReader(Joystick joystick, int buttonNum, String buttonName) {
+		controllerTab = Shuffleboard.getTab("Controllers");
 		this.joystick = joystick;
 		this.buttonNum = buttonNum;
 		this.buttonName = buttonName + "_BUTTON";
 		currState = this.joystick.getRawButton(buttonNum);
 		lastState = currState;
+		buttonStatus = controllerTab.add(buttonName, currState).getEntry();
 	}
 	/** Reads button value **/
 	public void readValue() {
@@ -35,7 +41,7 @@ public class ButtonReader {
 	}
 	/** Checks if the button is down **/
 	public boolean isDown() {
-		SmartDashboard.putBoolean(buttonName, currState);
+		buttonStatus.setBoolean(currState);
 		return currState;
 	}
 	/** Checks if the button was just pressed **/

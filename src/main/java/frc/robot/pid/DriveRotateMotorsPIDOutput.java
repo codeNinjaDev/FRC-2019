@@ -6,13 +6,19 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 public class DriveRotateMotorsPIDOutput implements PIDOutput{
 	private DifferentialDrive drive;
 	private double pidOutput;
-	public DriveRotateMotorsPIDOutput(DifferentialDrive drive) {
+	private boolean act;
+	public DriveRotateMotorsPIDOutput(DifferentialDrive drive, boolean act) {
 		this.drive = drive;
+		this.act = act;
 		this.pidOutput = 0;
 	}
 	@Override
 	public void pidWrite(double output) {
-		pidOutput = output;
+		if(act){
+			drive.arcadeDrive(0, output);
+		} else {
+			pidOutput = output;
+		}
 	}
 
 	public double getPIDOutput() {
