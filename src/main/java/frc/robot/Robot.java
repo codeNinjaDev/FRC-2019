@@ -106,6 +106,7 @@ public class Robot extends TimedRobot {
 		
 		
 		/*** Update Dashboard ***/
+		sim.setEnabled(true);
 
 	}
 
