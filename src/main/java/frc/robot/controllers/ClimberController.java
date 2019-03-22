@@ -40,7 +40,7 @@ public class ClimberController extends Subsystem {
 	public ClimberController(RemoteControl humanControl, DriveController driveController) {
 		this.humanControl = humanControl;
 		this.drive = driveController;
-		climbDoneButton = new DigitalInput(Ports.CLIMBER_BUTTON);
+		//climbDoneButton = new DigitalInput(Ports.CLIMBER_BUTTON);
 
 		climberMotorA = new VictorSP(Ports.CLIMBER_PORT_A);
 		climberMotorB = new VictorSP(Ports.CLIMBER_PORT_B);
@@ -58,11 +58,9 @@ public class ClimberController extends Subsystem {
 	}
 
 	public void update() {
-		if(humanControl.climbDesired()) {
+		climbMotors.set((humanControl.getJoystickValue(Joysticks.kOperatorJoy, RemoteControl.Axes.kLY)));
 
-			climbMotors.set((humanControl.getJoystickValue(Joysticks.kOperatorJoy, RemoteControl.Axes.kLY)));
-
-		}
+		
 			
 
 

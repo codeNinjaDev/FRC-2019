@@ -32,7 +32,7 @@ public class OuttakePistons extends Command {
 	@Override
 	public void initialize() {
 		start_time = Timer.getFPGATimestamp();
-		wrist.outtakePistons();
+		wrist.outtakePiston.set(true);
 	}
 	
 	protected void interrupted() {

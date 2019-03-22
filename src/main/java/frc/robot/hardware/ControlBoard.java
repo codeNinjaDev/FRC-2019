@@ -11,11 +11,11 @@ import edu.wpi.first.wpilibj.Joystick;
 public class ControlBoard extends RemoteControl {
 	//Operator Buttons
 /** Operator Buttons **/
-	public ButtonReader intakeCargoButton, shootHighCargoButton, shootLowCargoButton, shootMidCargo, scoreHatchButton, autoAlignCargoButton, autoAlignTapeButton, loadHatchButton, floorHatchButton;
+	public ButtonReader miscWristPosition, cargoBayButton, backCargoBayButton, rocketMidButton, intakeCargoButton, driverOuttakeCargoButton, shootHighCargoButton, shootLowCargoButton, shootMidCargo, operatorOuttakeCargoButton, autoAlignCargoButton, autoAlignTapeButton;
 	/*** Arm Override Trigger ***/
 	public ToggleButtonReader climbButton, armManualButton;
 /** Driver Triggers **/
-	public TriggerReader slowDriveTier1Button, slowDriveTier2Button, outtakePistonsButton;
+	public TriggerReader slowDriveTier1Button, slowDriveTier2Button, punchBallButton, pushHatchButton;
 
 	/** Driver joystick axes **/
 	private double driverLeftJoyX, driverLeftJoyY, driverRightJoyX, driverRightJoyY;
@@ -41,16 +41,22 @@ public class ControlBoard extends RemoteControl {
 			intakeCargoButton = new ButtonReader(driverJoy, XInput.XINPUT_WIN_GREEN_BUTTON, "INTAKE_CARGO");
 			climbButton = new ToggleButtonReader(driverJoy, XInput.XINPUT_WIN_X_BUTTON, "CLIMB");
 			//Operator Controls
-			shootHighCargoButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_YELLOW_BUTTON, "HIGH_CARGO");
-			shootMidCargo = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_BLUE_BUTTON, "MID_CARGO");
-			shootLowCargoButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_GREEN_BUTTON, "LOW_CARGO");
-			armManualButton = new ToggleButtonReader(operatorJoy, XInput.XINPUT_WIN_BACK_BUTTON, "ARM_MANUAL");
-			
-			outtakePistonsButton = new TriggerReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_TRIGGER_AXIS, "PUSH PISTON");
-			scoreHatchButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_BUMPER, "SCORE_HATCH");
-			floorHatchButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_LEFT_BUMPER, "FLOOR_HATCH");
-			loadHatchButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_RED_BUTTON, "LOAD_HATCH");
+			shootHighCargoButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_START_BUTTON, "FAST_CARGO");
+			shootMidCargo = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_LEFT_BUMPER, "MID_CARGO");
+			shootLowCargoButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_BUMPER, "SLOWER_CARGO");
 
+			cargoBayButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_GREEN_BUTTON, "CARGO_BAY_POSITION");
+			rocketMidButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_YELLOW_BUTTON, "ROCKET_MID_POSITION");
+			backCargoBayButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_BLUE_BUTTON, "SHOOTING_BACK_POSITION");
+			miscWristPosition = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_RED_BUTTON, "CUSTOM_WRIST_POSITION");
+
+			armManualButton = new ToggleButtonReader(operatorJoy, XInput.XINPUT_WIN_BACK_BUTTON, "ARM_MANUAL");
+			driverOuttakeCargoButton = new ButtonReader(driverJoy, XInput.XINPUT_WIN_BLUE_BUTTON, "OUTTAKE_CARGO");
+			punchBallButton = new TriggerReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_TRIGGER_AXIS, "PUNCH PISTON");
+			pushHatchButton = new TriggerReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_TRIGGER_AXIS, "PUSH PISTON");
+
+
+			operatorOuttakeCargoButton = new ButtonReader(operatorJoy, XInput.XINPUT_WIN_RIGHT_BUMPER, "Outtake Cargo");
 			
 			
 		}
@@ -89,18 +95,23 @@ public class ControlBoard extends RemoteControl {
 		//Operator 
 		
 		shootHighCargoButton.readValue();
+		shootMidCargo.readValue();
 		shootLowCargoButton.readValue();
 		armManualButton.readValue();
+
+		cargoBayButton.readValue();
+		backCargoBayButton.readValue();
+		rocketMidButton.readValue();
+		miscWristPosition.readValue();
 		
 		autoAlignCargoButton.readValue();
 		autoAlignTapeButton.readValue();
-		shootMidCargo.readValue();
-		scoreHatchButton.readValue();
+		operatorOuttakeCargoButton.readValue();
 		
-		outtakePistonsButton.readValue();
-
-		floorHatchButton.readValue();
-		loadHatchButton.readValue();
+		punchBallButton.readValue();
+		pushHatchButton.readValue();
+		driverOuttakeCargoButton.readValue();
+		
 
 	}
 
@@ -184,23 +195,15 @@ public class ControlBoard extends RemoteControl {
 	}
 
 	@Override
-	public boolean floorHatch() {
-		return floorHatchButton.isDown();
+	public boolean outtakeCargo() {
+		return driverOuttakeCargoButton.isDown() || operatorOuttakeCargoButton.isDown();
 	}
 
-	@Override
-	public boolean scoreHatch() {
-		return scoreHatchButton.isDown();
-	}
+
 
 	@Override
-	public boolean loadHatch() {
-		return loadHatchButton.isDown();
-	}
-
-	@Override
-	public boolean outtakePistons() {
-		return outtakePistonsButton.isDown();
+	public boolean punchBall() {
+		return punchBallButton.isDown();
 	}
 
 	@Override
@@ -216,6 +219,31 @@ public class ControlBoard extends RemoteControl {
 	@Override
 	public boolean climbDesired() {
 		return climbButton.isDown();
+	}
+
+	@Override
+	public boolean pushHatch() {
+		return pushHatchButton.isDown();
+	}
+
+	@Override
+	public boolean aimRocketMid() {
+		return rocketMidButton.isDown();
+	}
+
+	@Override
+	public boolean aimCargoBay() {
+		return cargoBayButton.isDown();
+	}
+
+	@Override
+	public boolean aimBackwardsCargoBay() {
+		return backCargoBayButton.isDown();
+	}
+
+	@Override
+	public boolean customWristPosition() {
+		return miscWristPosition.isDown();
 	}
 
 

@@ -4,6 +4,7 @@ import frc.robot.Params;
 import frc.robot.controllers.DriveController;
 import frc.robot.controllers.MotionController;
 import frc.robot.controllers.VisionController;
+import frc.robot.controllers.WristController;
 import frc.robot.hardware.RemoteControl;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.Compressor;
@@ -42,14 +43,14 @@ public class DashboardLogger {
 	private NetworkTableEntry driverJoyLY;
 	private NetworkTableEntry driverJoyLX;
 	private NetworkTableEntry driverJoyY;
-	private NetworkTableEntry matchTime;
-	private NetworkTableEntry wristSensor;
-	private NetworkTableEntry gyro;
+	private NetworkTableEntry time;
 
 
 
+	NetworkTableEntry resetEncoder;
 
-
+	NetworkTableEntry encoderAngle;
+	NetworkTableEntry armSetpoint;
 
 
 
@@ -58,17 +59,24 @@ public class DashboardLogger {
 
 
 	Compressor compressor;
+	WristController wrist;
 
-
-	public DashboardLogger(RemoteControl humanControl, DriveController driveController, VisionController vision) {
+	public DashboardLogger(RemoteControl humanControl, DriveController driveController, VisionController vision, WristController wrist) {
 		this.humanControl = humanControl;
 		this.driveController = driveController;
 		this.visionController = vision;
+		this.wrist = wrist;
 		controllerTab = Shuffleboard.getTab("Controllers");
 		electricalTab = Shuffleboard.getTab("Electrical");
 		sensorTab = Shuffleboard.getTab("Sensors");
 		matchTab = Shuffleboard.getTab("Match Info");
 		visionTab = Shuffleboard.getTab("Vision Info");
+
+
+
+		resetEncoder = sensorTab.add("Reset Encoder", false).getEntry();
+		encoderAngle = sensorTab.add("Encoder Angle", 0).getEntry();
+		armSetpoint = sensorTab.add("Arm Setpoint", 0).getEntry();
 
 		if(DriverStation.getInstance().isFMSAttached()) {
 			Shuffleboard.startRecording();
@@ -78,9 +86,14 @@ public class DashboardLogger {
 	}
 
 	public void updateData() {
+		if(resetEncoder.getBoolean(false))
+			wrist.reset();
+			
 		//SmartDashboard.putNumber("DEBUG_FPGATimestamp", robot.getTimestamp());
 		if(DriverStation.getInstance().isFMSAttached()) {
+			
 			putMatchInfo();
+			
 		}
 		putRobotElectricalData();
 		putJoystickAxesData();
@@ -178,7 +191,8 @@ public class DashboardLogger {
 		SmartDashboard.putNumber("LEFT_ENC_VELOCITY", driveController.leftDriveEncoder.getRate());
 		SmartDashboard.putNumber("RIGHT_ENC_VELOCITY", driveController.rightDriveEncoder.getRate());
 		SmartDashboard.putNumber("GYRO_ANGLE", driveController.getGyroAngle());
-
+		encoderAngle.setNumber(wrist.wristPotentiometer.getDistance());
+		armSetpoint.setNumber(wrist.armPID.getSetpoint());
 		
 		
 

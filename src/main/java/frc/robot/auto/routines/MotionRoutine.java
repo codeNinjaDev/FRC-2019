@@ -17,8 +17,8 @@ public class MotionRoutine extends CommandGroup{
 	public MotionRoutine(MotionController motion) {
 		
 		File csvFile = new File("/home/lvuser/deploy/path/test.pf1.csv");
-		trajectory = Pathfinder.readFromCSV(csvFile);
-		addSequential(new PathFollowerCommand(motion, trajectory, 4));
+		//trajectory = Pathfinder.readFromCSV(csvFile);
+		//addSequential(new PathFollowerCommand(motion, trajectory, 4));
 	}
 
 	

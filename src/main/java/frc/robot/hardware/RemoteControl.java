@@ -32,21 +32,31 @@ public abstract class RemoteControl {
 
 	/*** Go to intake cargo (PID) --Driver Green button ***/
 	public abstract boolean intakeCargo();
-	/*** Go to shoot high cargo (PID) -- Operator Yellow (Y) Button***/
+	/*** Go to shoot high cargo (PID) -- START Button***/
 	public abstract boolean shootHighCargo();
-	/*** Go to shoot low (PID) --Operator Green (A) Button***/
+	/*** Go to shoot low (PID) --Operator RIGHT BUMPER***/
 	public abstract boolean shootLowCargo();
-	/*** Go to shoot mid (PID) --Operator Blue (X) Button***/
+	/*** Go to shoot mid (PID) --Operator LEFT BUMPER***/
 	public abstract boolean shootMidCargo();
-	/*** Go to floor hatch (PID) --Operator Left Bumper Button***/
-	public abstract boolean floorHatch();
-	/*** Go to score hatch (PID) --Operator Right Bumper Button***/
-	public abstract boolean scoreHatch();
-	/*** Go to score hatch (PID) --Operator Red (B) Button***/
-	public abstract boolean loadHatch();
+	/*** Go to outtake cargo  --Operator Right Bumper Button***/
+	/*** Go to punch Cargo  --Driver Blue Button***/
+	public abstract boolean outtakeCargo();
 
-	/*** Go to score hatch (PID) --Operator Right trigger Button***/
-	public abstract boolean outtakePistons();
+	/*** Go to shoot high cargo (PID) -- Operator Yellow (Y) Button***/
+	public abstract boolean aimRocketMid();
+	/*** Go to shoot low (PID) --Operator Green (A) Button***/
+	public abstract boolean aimCargoBay();
+	/*** Go to shoot mid (PID) --Operator Blue (X) Button***/
+	public abstract boolean aimBackwardsCargoBay();
+	/*** Go to shoot mid (PID) --Operator Red (B) Button***/
+	public abstract boolean customWristPosition();
+	
+
+	/*** Punch Ball  --**/
+	public abstract boolean punchBall();
+
+	/*** Go to push hatch --Operator Left trigger Button***/
+	public abstract boolean pushHatch();
 
 	/*** Align with cargo Driver --Right Bumper***/
 	public abstract boolean getCargoVisionDesired();

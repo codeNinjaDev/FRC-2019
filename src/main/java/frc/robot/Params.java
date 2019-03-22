@@ -113,12 +113,12 @@ public class Params {
 	public static double ARM_STOW_SETPOINT = 0; 
 	public static double ARM_INTAKE_CARGO_SETPOINT = 0; 
 	public static double ARM_LOW_CARGO_SETPOINT = 0; 
-	public static double ARM_MID_CARGO_SETPOINT = 0; 
-	public static double ARM_HIGH_CARGO_SETPOINT = 0; 
-	public static double ARM_LOAD_HATCH_SETPOINT = 0; 
-	public static double ARM_SCORE_HATCH_SETPOINT = 0; 
-	public static double ARM_FLOOR_HATCH_SETPOINT = 0; 
+	public static double ARM_MISC_CARGO_SETPOINT = 0; 
+	public static double ARM_BACK_CARGO_SETPOINT = 0; 
 
-	public static double MAX_ARM_PID_OUT = 1;
+	public static double ARM_HIGH_CARGO_SETPOINT = 0; 
+
+
+	public static double MAX_ARM_PID_OUT = .8;
 
 }

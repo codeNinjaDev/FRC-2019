@@ -23,7 +23,7 @@ public class TenTurnPotentiometer extends SendableBase implements PIDSource {
 
 	// Gear 4 to 1 ratio
 
-	private double VOLT_TO_DEGREES = 720;
+	private double VOLT_TO_DEGREES = 360 / 5;
 	double starting_error;
 	protected PIDSourceType m_pidSource = PIDSourceType.kDisplacement;
 
@@ -36,9 +36,10 @@ public class TenTurnPotentiometer extends SendableBase implements PIDSource {
 		    m_channel = channel;
 				final int portHandle = HAL.getPort((byte) channel);
 		    m_port = AnalogJNI.initializeAnalogInputPort(portHandle);
-		    //temp
+				//temp
+				
 		    starting_error = (getAverageVoltage() * VOLT_TO_DEGREES);
-		    HAL.report(tResourceType.kResourceType_AnalogChannel, channel);
+				HAL.report(tResourceType.kResourceType_AnalogChannel, channel);
 		 }
 		 
 		 public void setGearRatio(double ratio) {

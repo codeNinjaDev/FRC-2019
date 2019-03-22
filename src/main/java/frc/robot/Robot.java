@@ -1,25 +1,13 @@
 package frc.robot;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 import frc.robot.hardware.*;
 import frc.robot.controllers.*;
 import frc.robot.auto.*;
 import frc.robot.feed.*;
-
-import edu.wpi.cscore.CvSink;
-import edu.wpi.cscore.CvSource;
-import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.hal.sim.DriverStationSim;
-import edu.wpi.first.wpilibj.CameraServer;
-import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Scheduler;
@@ -47,26 +35,27 @@ public class Robot extends TimedRobot {
 	private Timer visionTimer;
 	private Odometry odometry;
 	private WristController wrist;
-	private boolean override;
-	DriverStationSim sim;
+	private boolean resetFlag;
 
 	public Robot() {
 		super();
 		visionTimer = new Timer();
-		sim = new DriverStationSim();
+
 		humanControl = new ControlBoard();
 		visionController = new VisionController(humanControl, visionTimer);
 		wrist = new WristController(humanControl);
 		driveController = new DriveController(humanControl, visionController);
 		lights = new LightController();
 		motion = new MotionController(driveController);
-		dashboardLogger = new DashboardLogger(humanControl, driveController, visionController);
+		dashboardLogger = new DashboardLogger(humanControl, driveController, visionController, wrist);
 		input  = new DashboardInput();	
 		auto = new AutoSelector(driveController, motion, visionController, wrist, lights);
 		odometry = new Odometry(driveController, visionTimer);
-		override = false;
+		resetFlag = false;
+
 
 	}
+
 
 
 	/**
@@ -75,25 +64,7 @@ public class Robot extends TimedRobot {
 	 */
 	@Override
 	public void robotInit() {
-		new Thread(() -> {
-			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
-			camera.setResolution(240, 180);
-			
-			CvSink cvSink = CameraServer.getInstance().getVideo();
-			CvSource outputStream = CameraServer.getInstance().putVideo("DriverCam", 240, 180);
-			
-			Mat source = new Mat();
-			Mat output = new Mat();
-			
-			while(!Thread.interrupted()) {
-				long frameTime = cvSink.grabFrame(source);
-				if (frameTime == 0) {
-				continue;
-				}
-				//Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
-				outputStream.putFrame(source);
-			}
-		}).start();
+		CameraServer.getInstance().startAutomaticCapture();
 
 		// Sets enabled lights
 		lights.setEnabledLights();
@@ -106,7 +77,6 @@ public class Robot extends TimedRobot {
 		
 		
 		/*** Update Dashboard ***/
-		sim.setEnabled(true);
 
 	}
 
@@ -122,18 +92,9 @@ public class Robot extends TimedRobot {
 		//Update input from Robot Preferences
 		input.updateInput();
 		wrist.reset();
-		
-		//Reset auto timer
-		//Update robot preferences
-		input.updateInput();
-		//Starts Autonomous Routine
-		try {
-			auto.getSelectedAuto().start();
 
-		} catch(Exception e) {
-			System.out.println(e);
-			override = true;
-		}
+		
+		
 	}
 
 	/**
@@ -141,10 +102,32 @@ public class Robot extends TimedRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		teleopPeriodic();
+		/*if(humanControl.getCargoVisionDesired()) {
+			override = true;
 
-	}
+		} 
 
+		if(override) {
+			Scheduler.getInstance().removeAll();
+			auto.cancelAuto();
+			odometry.update();
+			humanControl.readControls();
+			driveController.update();
+			wrist.update();
+			climber.update();
+			//Log Gyro angle
+			//SmartDashboard.putNumber("gyro", robot.getAngle());
+			//Start auto pattern on led strip
+			lights.setAutoLights();
+			//Log data to the Dashboard
+			dashboardLogger.updateData();
+		} else {
+			Scheduler.getInstance().run();
+    }*/
+    teleopPeriodic();
+
+	};
+ 
 	/**
 	 * This function is called once each time the robot enters tele-operated
 	 * mode
@@ -202,9 +185,12 @@ public class Robot extends TimedRobot {
 	}
 
 	public void disabledPeriodic() {
+
 		dashboardLogger.putParamData();
 		visionController.update();
-
+		if(!DriverStation.getInstance().isFMSAttached()) {
+			//wrist.reset();			
+		}
 		//Put Gyro Angle on SmartDashboard
 		//SmartDashboard.putNumber("gyro", robot.getAngle());
 		//Update input from Dashboard

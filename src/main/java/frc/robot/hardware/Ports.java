@@ -34,7 +34,7 @@ public class Ports {
 	public static final int[] SHOOTER_SOLENOIDS = {2};
 
 	/**** ANALOG IN */
-	public static final int WRIST_POT           = 0; 
+	public static final int WRIST_POT[]           = {0,1}; 
 
 
 	// ***************** MISC *****************
